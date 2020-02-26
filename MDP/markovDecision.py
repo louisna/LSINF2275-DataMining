@@ -23,7 +23,32 @@ def markovDecision(layout, circle):
     """
     pass
 
-def random_strategy(layout, circle):
+
+def random_dice():
+    """
+    Make always a random choice between the safe and the normal dices
+    :return: 0 for the safe dice, and 1 for the normal dice
+    """
+    return random.randint(0, 1)
+
+
+def safe_dice():
+    """
+    Make always the choice of the safe dice
+    :return: 0 for the safe dice
+    """
+    return 0
+
+
+def normal_dice():
+    """
+    Make always the choice of the normal dice
+    :return: 1 for the normal dice
+    """
+    return 1
+
+
+def other_strategy(layout, circle):
     """
     Determine a random strategy to the Snake and ladder game
     This random strategy is implemented as follow: at each turn, select randomly the dice to throw
@@ -40,21 +65,47 @@ def random_strategy(layout, circle):
     while (circle and current != 15) or (not circle and current < 15):
         turn += 1
         if freeze:
+            print("FROZEN")
+            freeze = False
             continue  # Frozen
-        dice_choice = random.randint(0, 1)
+        dice_choice = random_dice()  # CHOSE MOVE
         new, freeze = make_movement(current, dice_choice, layout, circle)
         Dice[current] = new
+        print("turn:", turn, current, "improvement of", new-current, new)
         current = new
-        print(new)
 
 
 def make_movement(current, dice, layout, circle):
-    if not dice:  # random dice
+    """
+    Function that makes the movement, according to the current position of the player, the chosen dice, the
+    layout of the grid, and if we authorize to circle
+    :param current: current position of the player
+    :param dice: The chosen dice, can be safe or normal
+    :param layout: The layout of the grid
+    :param circle: Boolean value indicating if we can circle in the grid
+    :return: The new position on the grid, and a boolean value indicating if the player is frozen for the next round
+    """
+    on_fast = False
+    if 11 <= current <= 14:
+        on_fast = True
+    elif current == 3:
+        on_fast = random.randint(0, 1) == 1  # Suppose 1 => take fast
+        print("make decision", on_fast)
+    if not dice:  # Random dice
         movement = random.randint(0, 1)
-        return current + movement, False
+        if current == 3 and on_fast and movement > 0:
+            return current + movement + 7, False  # Add fast index
+        elif 4 <= current <= 10 and current + movement >= 11:
+            return current + movement + 4, False
+        else:
+            return current + movement, False
     else:
         movement = random.randint(0, 2)
         new = current + movement
+        if current == 3 and on_fast and movement > 0:
+            new += 7
+        elif 4 <= current <= 10 and new >= 11:  # Consider 11 as the 15
+            new += 4
         # Check circle value
         if new >= 15 and not circle:
             return new, False
@@ -70,7 +121,11 @@ def make_movement(current, dice, layout, circle):
         if trap == 1:
             return 1, False  # Go back to start
         if trap == 2:
-            return max(0, new-3), False
+            # Pay attention to if it is the fast path
+            if 11 <= new <= 13:
+                return new - 3 - 7, False
+            else:
+                return max(0, new-3), False
         if trap == 3:
             return new, True  # J'AI MIS CA COMME CA MAIS CA PUE EN VRAI
         else:
@@ -78,6 +133,10 @@ def make_movement(current, dice, layout, circle):
 
 
 if __name__ == "__main__":
-    layout = np.array([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
+    layout_0 = np.array([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
+    layout_1 = np.array([0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1])
+    layout_2 = np.array([0, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2])
+    layout_3 = np.array([0, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3])
+    layout_4 = np.array([0, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4])
     circle = False
-    print(random_strategy(layout, circle))
+    other_strategy(layout_4, circle)
