@@ -26,15 +26,22 @@ def markovDecision(layout, circle):
                 squares of the game (1 for “security” dice, 2 for “normal” dice), excluding the finish one.
     """
     Dice = np.array([0]*14)
-    Expec = np.array([1000000]*15)
+    Expec = np.array([10]*15)
+    Expec[14] = 0
     Old = np.array([0.0]*15)
 
     count = 0
     tier = 1/3
+    # np.sum((Expec-Old)**2) > epsilon
 
-    while np.sum((Expec-Old)**2) > epsilon:  # no improvement between Expec and Old
+    while count < 100:  # no improvement between Expec and Old
+        if count == 0:
+            Old = np.array([0.0] * 15)
+        else:
+            Old = Expec.copy()  # ?
         count += 1
-        Expec = np.array([1000000] * 15)
+        Expec = np.array([0.0] * 15)
+        Expec[14] = 0
         for i in range(len(Dice)-1, -1, -1):
             # Safe dice value computation
             safe_value = 1 + (0.5 * Old[i])
@@ -59,7 +66,11 @@ def markovDecision(layout, circle):
             elif i == 8:  # +1 => finish
                 normal_value += 0  # Useless
             else:
-                normal_value += tier * trap_probability(Old, i+1, layout, circle)
+                if i == 9:
+                    new_pos = 15
+                else:
+                    new_pos = i + 2
+                normal_value += tier * trap_probability(Old, new_pos, layout, circle)
 
             # Compute min_arg and min_value
             if safe_value < normal_value:
@@ -69,8 +80,6 @@ def markovDecision(layout, circle):
                 Expec[i] = normal_value
                 Dice[i] = 2
         # Update values
-        Old = Expec.copy()  # ?
-
     return Expec, Dice
 
 
@@ -208,10 +217,10 @@ def make_movement(current, movement, dice, layout, circle):
 
 if __name__ == "__main__":
     layout_0 = np.array([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
-    layout_1 = np.array([0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1])
-    layout_2 = np.array([0, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2])
-    layout_3 = np.array([0, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3])
-    layout_4 = np.array([0, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4])
+    layout_1 = np.array([0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0])
+    layout_2 = np.array([0, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0])
+    layout_3 = np.array([0, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 0])
+    layout_4 = np.array([0, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 0])
     circle_0 = False
     # other_strategy(layout_4, circle_0)
-    print(markovDecision(layout_0, circle_0))
+    print(markovDecision(layout_4, circle_0))
