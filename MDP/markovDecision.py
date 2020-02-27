@@ -113,7 +113,7 @@ def random_dice():
     Make always a random choice between the safe and the normal dices
     :return: 0 for the safe dice, and 1 for the normal dice
     """
-    return random.randint(1, 2)
+    return [random.randint(1, 2) for i in range(15)]
 
 
 def safe_dice():
@@ -121,7 +121,7 @@ def safe_dice():
     Make always the choice of the safe dice
     :return: 1 for the safe dice
     """
-    return 1
+    return [1]* 14
 
 
 def normal_dice():
@@ -129,10 +129,10 @@ def normal_dice():
     Make always the choice of the normal dice
     :return: 2 for the normal dice
     """
-    return 2
+    return [2] * 14
 
 
-def other_strategy(layout, circle):
+def play_game(layout, circle):
     """
     Determine a random strategy to the Snake and ladder game
     This random strategy is implemented as follow: at each turn, select randomly the dice to throw
@@ -141,26 +141,27 @@ def other_strategy(layout, circle):
     :return: See above
     """
 
-    Dice = np.array([0]*len(layout))
+    dice_strategy = markovDecision(layout, circle)[1]
+    # dice_strategy = random_dice()
     current = 1
     freeze = False
     turn = 0
 
-    while (circle and current != 15) or (not circle and current < 15):
+    while (circle and current != 14) or (not circle and current < 14):
         turn += 1
         if freeze:
             print("FROZEN")
             freeze = False
             continue  # Frozen
-        dice_choice = random_dice()  # CHOSE MOVE
-        movement = random.randint(0, dice_choice)
-        new, freeze = make_movement(current, movement, dice_choice, layout, circle)
-        Dice[current] = new
-        print("turn:", turn, current, "improvement of", new-current, new)
+        print(current)
+        new, freeze = make_movement(current, dice_strategy[current], layout, circle)
+        # print("turn:", turn, current, "improvement of", new-current, new)
         current = new
+    print(turn, "turns to reach the goal")
+    print(dice_strategy)
 
 
-def make_movement(current, movement, dice, layout, circle):
+def make_movement(current, dice, layout, circle):
     """
     Function that makes the movement, according to the current position of the player, the chosen dice, the
     layout of the grid, and if we authorize to circle
@@ -171,30 +172,32 @@ def make_movement(current, movement, dice, layout, circle):
     :return: The new position on the grid, and a boolean value indicating if the player is frozen for the next round
     """
     on_fast = False
-    if 11 <= current <= 14:
+    if 10 <= current <= 13:
         on_fast = True
-    elif current == 3:
+    elif current == 2:
         on_fast = random.randint(0, 1) == 1  # Suppose 1 => take fast
         print("make decision", on_fast)
     if dice == 1:  # Random dice
-        if current == 3 and on_fast and movement > 0:
+        movement = random.randint(0, 1)
+        if current == 2 and on_fast and movement > 0:
             return current + movement + 7, False  # Add fast index
-        elif 4 <= current <= 10 and current + movement >= 11:
+        elif 3 <= current <= 9 and current + movement >= 10:
             return current + movement + 4, False
         else:
             return current + movement, False
     else:
+        movement = random.randint(0, 2)
         new = current + movement
-        if current == 3 and on_fast and movement > 0:
+        if current == 2 and on_fast and movement > 0:
             new += 7
-        elif 4 <= current <= 10 and new >= 11:  # Consider 11 as the 15
+        elif 3 <= current <= 9 and new >= 10:  # Consider 11 as the 15
             new += 4
         # Check circle value
-        if new >= 15 and not circle:
+        if new >= 14 and not circle:
             return new, False
-        if new == 15:  # Should be useless
-            return 15, False
-        new = new % 16
+        if new == 14:  # Should be useless
+            return 14, False
+        new = new % 15
         if layout[new-1] == 4:
             trap = random.randint(1, 3)
         else:
@@ -205,7 +208,7 @@ def make_movement(current, movement, dice, layout, circle):
             return 1, False  # Go back to start
         if trap == 2:
             # Pay attention to if it is the fast path
-            if 11 <= new <= 13:
+            if 10 <= new <= 12:
                 return new - 3 - 7, False
             else:
                 return max(0, new-3), False
@@ -214,6 +217,12 @@ def make_movement(current, movement, dice, layout, circle):
         else:
             raise ArithmeticError  # Should not happen
 
+def gen_map():
+    m = [random.randint(0, 4) for i in range(15)]
+    m[0] = 0
+    m[14] = 0
+    return m
+
 
 if __name__ == "__main__":
     layout_0 = np.array([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
@@ -221,6 +230,7 @@ if __name__ == "__main__":
     layout_2 = np.array([0, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0])
     layout_3 = np.array([0, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 0])
     layout_4 = np.array([0, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 0])
+    layout_5 = np.array([0, 4, 0, 1, 0, 2, 3, 4, 0, 0, 2, 1, 0, 4, 0])
     circle_0 = True
-    # other_strategy(layout_4, circle_0)
-    print(markovDecision(layout_4, circle_0))
+    play_game(gen_map(), circle_0)
+    #print(markovDecision(layout_4, circle_0))
