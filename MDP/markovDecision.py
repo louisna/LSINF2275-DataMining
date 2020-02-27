@@ -69,13 +69,14 @@ def other_strategy(layout, circle):
             freeze = False
             continue  # Frozen
         dice_choice = random_dice()  # CHOSE MOVE
-        new, freeze = make_movement(current, dice_choice, layout, circle)
+        movement = random.randint(0, dice_choice)
+        new, freeze = make_movement(current, movement, dice_choice, layout, circle)
         Dice[current] = new
         print("turn:", turn, current, "improvement of", new-current, new)
         current = new
 
 
-def make_movement(current, dice, layout, circle):
+def make_movement(current, movement, dice, layout, circle):
     """
     Function that makes the movement, according to the current position of the player, the chosen dice, the
     layout of the grid, and if we authorize to circle
@@ -92,7 +93,6 @@ def make_movement(current, dice, layout, circle):
         on_fast = random.randint(0, 1) == 1  # Suppose 1 => take fast
         print("make decision", on_fast)
     if dice == 1:  # Random dice
-        movement = random.randint(0, 1)
         if current == 3 and on_fast and movement > 0:
             return current + movement + 7, False  # Add fast index
         elif 4 <= current <= 10 and current + movement >= 11:
@@ -100,7 +100,6 @@ def make_movement(current, dice, layout, circle):
         else:
             return current + movement, False
     else:
-        movement = random.randint(0, 2)
         new = current + movement
         if current == 3 and on_fast and movement > 0:
             new += 7
