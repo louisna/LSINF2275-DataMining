@@ -1,6 +1,10 @@
 import numpy as np
 import random
 
+safe_proba = np.array([0.5, 0.5])
+normal_proba = np.array([1/3, 1/3, 1/3])
+epsilon = 10 ** (-4)
+
 
 def markovDecision(layout, circle):
     """
@@ -21,7 +25,78 @@ def markovDecision(layout, circle):
                 - Dice: a vector of type numpy.ndarray containing the choice of the dice to use for each of the 14
                 squares of the game (1 for “security” dice, 2 for “normal” dice), excluding the finish one.
     """
-    pass
+    Dice = np.array([0]*14)
+    Expec = np.array([1000000]*15)
+    Old = np.array([0.0]*15)
+
+    count = 0
+    tier = 1/3
+
+    while np.sum((Expec-Old)**2) > epsilon:  # no improvement between Expec and Old
+        count += 1
+        Expec = np.array([1000000] * 15)
+        for i in range(len(Dice)-1, -1, -1):
+            # Safe dice value computation
+            safe_value = 1 + (0.5 * Old[i])
+            if i == 2:
+                safe_value += 0.5 * (0.5 * Old[3] + 0.5 * Old[10])
+            elif i == 9:
+                safe_value += 0  # Useless
+            else:
+                safe_value += 0.5 * Old[i+1]
+            # Normal dice value computation
+            normal_value = 1 + (tier * trap_probability(Old, i, layout, circle))  # Stay
+            # Movement by 1
+            if i == 2:
+                normal_value += tier * 0.5 * (trap_probability(Old, 3, layout, circle) + trap_probability(Old, 10, layout, circle))
+            elif i == 9:  # +1 => finish
+                normal_value += 0  # Useless
+            else:
+                normal_value += tier * trap_probability(Old, i+1, layout, circle)
+            # Movement by 2
+            if i == 2:
+                normal_value += tier * 0.5 * (trap_probability(Old, 4, layout, circle) + trap_probability(Old, 11, layout, circle))
+            elif i == 8:  # +1 => finish
+                normal_value += 0  # Useless
+            else:
+                normal_value += tier * trap_probability(Old, i+1, layout, circle)
+
+            # Compute min_arg and min_value
+            if safe_value < normal_value:
+                Expec[i] = safe_value
+                Dice[i] = 1
+            else:
+                Expec[i] = normal_value
+                Dice[i] = 2
+        # Update values
+        Old = Expec.copy()  # ?
+
+    return Expec, Dice
+
+
+
+def trap_probability(Old, pos_arrival, layout, circle):
+    pos_arrival = position(pos_arrival, circle)
+    tier = 1/3
+    traps = [0.0]*5
+    traps[0] = Old[pos_arrival]
+    traps[1] = Old[0]
+    if 10 <= pos_arrival <= 12:
+        pos_trap_2 = pos_arrival - 10
+    else:
+        pos_trap_2 = pos_arrival - 3
+    traps[2] = Old[max(0, pos_trap_2)]
+    traps[3] = 1 + Old[pos_arrival]
+    traps[4] = tier * sum(traps[0:3])
+    return traps[layout[pos_arrival]]
+
+
+def position(new, circle):
+    if not circle and new >= 14:
+        return 14
+    elif circle and new == 14:
+        return 14
+    return new % 15
 
 
 def random_dice():
@@ -137,5 +212,6 @@ if __name__ == "__main__":
     layout_2 = np.array([0, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2])
     layout_3 = np.array([0, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3])
     layout_4 = np.array([0, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4])
-    circle = False
-    other_strategy(layout_4, circle)
+    circle_0 = False
+    # other_strategy(layout_4, circle_0)
+    print(markovDecision(layout_0, circle_0))
