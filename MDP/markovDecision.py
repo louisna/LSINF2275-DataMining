@@ -221,6 +221,6 @@ if __name__ == "__main__":
     layout_2 = np.array([0, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0])
     layout_3 = np.array([0, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 0])
     layout_4 = np.array([0, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 0])
-    circle_0 = False
+    circle_0 = True
     # other_strategy(layout_4, circle_0)
     print(markovDecision(layout_4, circle_0))
