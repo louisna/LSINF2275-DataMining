@@ -29,23 +29,23 @@ def random_dice():
     Make always a random choice between the safe and the normal dices
     :return: 0 for the safe dice, and 1 for the normal dice
     """
-    return random.randint(0, 1)
+    return random.randint(1, 2)
 
 
 def safe_dice():
     """
     Make always the choice of the safe dice
-    :return: 0 for the safe dice
+    :return: 1 for the safe dice
     """
-    return 0
+    return 1
 
 
 def normal_dice():
     """
     Make always the choice of the normal dice
-    :return: 1 for the normal dice
+    :return: 2 for the normal dice
     """
-    return 1
+    return 2
 
 
 def other_strategy(layout, circle):
@@ -91,7 +91,7 @@ def make_movement(current, dice, layout, circle):
     elif current == 3:
         on_fast = random.randint(0, 1) == 1  # Suppose 1 => take fast
         print("make decision", on_fast)
-    if not dice:  # Random dice
+    if dice == 1:  # Random dice
         movement = random.randint(0, 1)
         if current == 3 and on_fast and movement > 0:
             return current + movement + 7, False  # Add fast index
