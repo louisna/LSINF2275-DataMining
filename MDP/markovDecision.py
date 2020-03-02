@@ -1,9 +1,13 @@
 import numpy as np
 import random
+from markovDecisionMatrix import *
+import matplotlib.pyplot as plt
 
 safe_proba = np.array([0.5, 0.5])
 normal_proba = np.array([1/3, 1/3, 1/3])
 epsilon = 10 ** (-4)
+
+random.seed(8)
 
 
 def markovDecision(layout, circle):
@@ -32,9 +36,8 @@ def markovDecision(layout, circle):
 
     count = 0
     tier = 1/3
-    # np.sum((Expec-Old)**2) > epsilon
 
-    while count < 100:  # no improvement between Expec and Old
+    while np.sum((Expec-Old)**2) > epsilon:  # no improvement between Expec and Old
         if count == 0:
             Old = np.array([0.0] * 15)
         else:
@@ -83,7 +86,6 @@ def markovDecision(layout, circle):
     return Expec, Dice
 
 
-
 def trap_probability(Old, pos_arrival, layout, circle):
     pos_arrival = position(pos_arrival, circle)
     tier = 1/3
@@ -121,7 +123,7 @@ def safe_dice():
     Make always the choice of the safe dice
     :return: 1 for the safe dice
     """
-    return [1]* 14
+    return [1] * 14
 
 
 def normal_dice():
@@ -132,17 +134,16 @@ def normal_dice():
     return [2] * 14
 
 
-def play_game(layout, circle):
+def play_game(layout, circle, dice_strategy):
     """
     Determine a random strategy to the Snake and ladder game
     This random strategy is implemented as follow: at each turn, select randomly the dice to throw
     :param layout: See above
     :param circle: See above
+    :param dice_strategy:
     :return: See above
     """
 
-    dice_strategy = markovDecision(layout, circle)[1]
-    # dice_strategy = random_dice()
     current = 1
     freeze = False
     turn = 0
@@ -150,15 +151,12 @@ def play_game(layout, circle):
     while (circle and current != 14) or (not circle and current < 14):
         turn += 1
         if freeze:
-            print("FROZEN")
             freeze = False
             continue  # Frozen
-        print(current)
-        new, freeze = make_movement(current, dice_strategy[current], layout, circle)
-        # print("turn:", turn, current, "improvement of", new-current, new)
-        current = new
-    print(turn, "turns to reach the goal")
-    print(dice_strategy)
+        else:
+            new, freeze = make_movement(current, dice_strategy[current], layout, circle)
+            current = new
+    return turn
 
 
 def make_movement(current, dice, layout, circle):
@@ -176,7 +174,7 @@ def make_movement(current, dice, layout, circle):
         on_fast = True
     elif current == 2:
         on_fast = random.randint(0, 1) == 1  # Suppose 1 => take fast
-        print("make decision", on_fast)
+        # print("make decision", on_fast)
     if dice == 1:  # Random dice
         movement = random.randint(0, 1)
         if current == 2 and on_fast and movement > 0:
@@ -217,20 +215,48 @@ def make_movement(current, dice, layout, circle):
         else:
             raise ArithmeticError  # Should not happen
 
+
 def gen_map():
-    m = [random.randint(0, 4) for i in range(15)]
-    m[0] = 0
-    m[14] = 0
+    m = [0] * 15
+    for i in range(1, 14):
+        if random.randint(0, 1) == 0:
+            m[i] = random.randint(1, 4)
     return m
 
 
+def box_plot():
+    circle = False
+    layout = gen_map()
+    always_safe = safe_dice()
+    always_normal = normal_dice()
+    always_random = random_dice()
+    markov = markovDecision(layout, circle)[1]
+
+    nb = 100  # Nb of experiments
+    safe_result = [0] * nb
+    normal_result = [0] * nb
+    random_result = [0] * nb
+    markov_result = [0] * nb
+
+    for i in range(nb):
+        safe_result[i] = play_game(layout, circle, always_safe)
+        normal_result[i] = play_game(layout, circle, always_normal)
+        random_result[i] = play_game(layout, circle, always_random)
+        markov_result[i] = play_game(layout, circle, markov)
+
+    plt.boxplot([markov_result, safe_result, normal_result, random_result])
+    plt.show()
+
+
 if __name__ == "__main__":
-    layout_0 = np.array([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
-    layout_1 = np.array([0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0])
-    layout_2 = np.array([0, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0])
-    layout_3 = np.array([0, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 0])
-    layout_4 = np.array([0, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 0])
-    layout_5 = np.array([0, 4, 0, 1, 0, 2, 3, 4, 0, 0, 2, 1, 0, 4, 0])
-    circle_0 = True
-    play_game(gen_map(), circle_0)
-    #print(markovDecision(layout_4, circle_0))
+    # layout_0 = np.array([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
+    # layout_1 = np.array([0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0])
+    # layout_2 = np.array([0, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0])
+    # layout_3 = np.array([0, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 0])
+    # layout_4 = np.array([0, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 0])
+    # layout_5 = np.array([0, 4, 0, 1, 0, 2, 3, 4, 0, 0, 2, 1, 0, 4, 0])
+    # circle_0 = True
+    # play_game(gen_map(), circle_0)
+    # print(markovDecision(layout_4, circle_0))
+    box_plot()
+
