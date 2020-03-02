@@ -5,9 +5,9 @@ import matplotlib.pyplot as plt
 
 safe_proba = np.array([0.5, 0.5])
 normal_proba = np.array([1/3, 1/3, 1/3])
-epsilon = 10 ** (-4)
+epsilon = 10 ** (-7)
 
-random.seed(8)
+random.seed(1998)
 
 
 def markovDecision(layout, circle):
@@ -83,6 +83,8 @@ def markovDecision(layout, circle):
                 Expec[i] = normal_value
                 Dice[i] = 2
         # Update values
+    print(Expec)
+    print(Dice)
     return Expec, Dice
 
 
@@ -195,10 +197,10 @@ def make_movement(current, dice, layout, circle):
         if new == 14:  # Should be useless
             return 14, False
         new = new % 15
-        if layout[new-1] == 4:
+        if layout[new] == 4:
             trap = random.randint(1, 3)
         else:
-            trap = layout[new-1]
+            trap = layout[new]
         if trap == 0:  # Safe place
             return new, False
         if trap == 1:
@@ -230,21 +232,23 @@ def box_plot():
     always_normal = normal_dice()
     always_random = random_dice()
     markov = markovDecision(layout, circle)[1]
-    print(markov)
 
-    nb = 500  # Nb of experiments
-    safe_result = [0] * nb
-    normal_result = [0] * nb
-    random_result = [0] * nb
-    markov_result = [0] * nb
+    nb = 1000  # Nb of experiments
+    safe_result = np.array([0.0] * nb)
+    normal_result = np.array([0.0] * nb)
+    random_result = np.array([0.0] * nb)
+    markov_result = np.array([0.0] * nb)
 
     for i in range(nb):
+        safe_result[i] = play_game(layout, circle, always_safe)
         normal_result[i] = play_game(layout, circle, always_normal)
         random_result[i] = play_game(layout, circle, always_random)
-        safe_result[i] = play_game(layout, circle, always_safe)
         markov_result[i] = play_game(layout, circle, markov)
 
-    plt.boxplot([markov_result, safe_result, normal_result, random_result])
+    plt.boxplot([markov_result, safe_result, normal_result, random_result], showmeans=True, meanline=True, showfliers=False)
+    plt.title("Boxplot of empirical cost for the 4 strategies")
+    plt.xticks([1, 2, 3, 4], ['Markov', 'Always safe', 'Always normal', 'Always random'])
+    plt.ylabel("Experimental cost")
     plt.show()
 
 
