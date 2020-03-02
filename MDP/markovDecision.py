@@ -144,7 +144,7 @@ def play_game(layout, circle, dice_strategy):
     :return: See above
     """
 
-    current = 1
+    current = 0
     freeze = False
     turn = 0
 
@@ -174,8 +174,7 @@ def make_movement(current, dice, layout, circle):
         on_fast = True
     elif current == 2:
         on_fast = random.randint(0, 1) == 1  # Suppose 1 => take fast
-        # print("make decision", on_fast)
-    if dice == 1:  # Random dice
+    if dice == 1:  # Safe dice
         movement = random.randint(0, 1)
         if current == 2 and on_fast and movement > 0:
             return current + movement + 7, False  # Add fast index
@@ -231,17 +230,18 @@ def box_plot():
     always_normal = normal_dice()
     always_random = random_dice()
     markov = markovDecision(layout, circle)[1]
+    print(markov)
 
-    nb = 100  # Nb of experiments
+    nb = 500  # Nb of experiments
     safe_result = [0] * nb
     normal_result = [0] * nb
     random_result = [0] * nb
     markov_result = [0] * nb
 
     for i in range(nb):
-        safe_result[i] = play_game(layout, circle, always_safe)
         normal_result[i] = play_game(layout, circle, always_normal)
         random_result[i] = play_game(layout, circle, always_random)
+        safe_result[i] = play_game(layout, circle, always_safe)
         markov_result[i] = play_game(layout, circle, markov)
 
     plt.boxplot([markov_result, safe_result, normal_result, random_result])
