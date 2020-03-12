@@ -1,6 +1,5 @@
 import numpy as np
 import random
-from markovDecisionMatrix import *
 import matplotlib.pyplot as plt
 
 safe_proba = np.array([0.5, 0.5])
@@ -83,8 +82,8 @@ def markovDecision(layout, circle):
                 Expec[i] = normal_value
                 Dice[i] = 2
         # Update values
-    print(Expec)
-    print(Dice)
+    # print(Expec)
+    # print(Dice)
     return Expec, Dice
 
 
@@ -224,10 +223,35 @@ def gen_map():
             m[i] = random.randint(1, 4)
     return m
 
+def gen_map_with_probabilities(prob,trap):
+    """
+    prob == [0,100]
+    trap == [1,4]
+    """
+    m = [0] * 15
+    for i in range(1, 14):
+        if random.randint(0,100) <= prob:
+            m[i] = trap
+    return m
+
+def gen_map_with_nb(nb,trap):
+    """
+    prob == [1,13]
+    trap == [1,4]
+    """
+    m = [0] * 15
+    for i in range(0, nb):
+        while True:
+            case = random.randint(1, 14)
+            if m[case] == 0:
+                m[case] = trap
+                break
+    return m
 
 def box_plot():
     circle = False
-    layout = gen_map()
+    layout = gen_map_with_probabilities(20,1)
+    print("map",layout)
     always_safe = safe_dice()
     always_normal = normal_dice()
     always_random = random_dice()
@@ -252,6 +276,54 @@ def box_plot():
     plt.show()
 
 
+def simu(trap):
+    exp = 100
+    ewa = 1
+    expected = np.array([0.0] * exp)
+    experimantal = np.array([0.0] * exp)
+    for i in range(0,exp):
+        nb = 2000  # Nb of experiments
+        markov_result = np.array([0.0] * nb)
+        expected_result = np.array([0.0] * nb)
+        for j in range(nb):
+            circle = False
+            layout = gen_map_with_probabilities(i*ewa,trap)
+            tmp = markovDecision(layout, circle)
+            expected_result[j] = tmp[0][0]
+            markov = tmp[1]
+            markov_result[j] = play_game(layout, circle, markov)
+        print(i)
+        expected[i] = np.mean(expected_result)
+        experimantal[i] = np.mean(markov_result)
+
+    print(experimantal)
+    plt.plot(list(range(0,exp)),expected,marker='s',color="C0")
+    plt.plot(list(range(0,exp)),experimantal,marker='^',color="C1")
+    plt.show()
+
+def simu2(trap):
+    exp = 14
+    ewa = 1
+    expected = np.array([0.0] * exp)
+    experimantal = np.array([0.0] * exp)
+    for i in range(exp):
+        nb = 1000000  # Nb of experiments
+        markov_result = np.array([0.0] * nb)
+        circle = False
+        layout = gen_map_with_nb(i*ewa,trap)
+        tmp = markovDecision(layout, circle)
+        expected[i] = tmp[0][0]
+        markov = tmp[1]
+        for j in range(nb):
+            markov_result[j] = play_game(layout, circle, markov)
+        print(i)
+        experimantal[i] = np.mean(markov_result)
+
+    print(experimantal)
+    plt.plot(list(range(0,exp)),expected,marker='s',color="C0")
+    plt.plot(list(range(0,exp)),experimantal,marker='^',color="C1")
+    plt.show()
+
 if __name__ == "__main__":
     # layout_0 = np.array([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
     # layout_1 = np.array([0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0])
@@ -262,5 +334,5 @@ if __name__ == "__main__":
     # circle_0 = True
     # play_game(gen_map(), circle_0)
     # print(markovDecision(layout_4, circle_0))
-    box_plot()
+    simu2(4)
 
