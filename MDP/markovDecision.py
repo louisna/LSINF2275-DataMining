@@ -1,6 +1,7 @@
 import numpy as np
 import random
 import matplotlib.pyplot as plt
+from markovDecisionMatrix import markovDecision_matrix
 
 safe_proba = np.array([0.5, 0.5])
 normal_proba = np.array([1/3, 1/3, 1/3])
@@ -307,17 +308,25 @@ def simu2(trap):
     expected = np.array([0.0] * exp)
     experimantal = np.array([0.0] * exp)
     for i in range(exp):
-        nb = 1000000  # Nb of experiments
-        markov_result = np.array([0.0] * nb)
-        circle = False
-        layout = gen_map_with_nb(i*ewa,trap)
-        tmp = markovDecision(layout, circle)
-        expected[i] = tmp[0][0]
-        markov = tmp[1]
-        for j in range(nb):
-            markov_result[j] = play_game(layout, circle, markov)
+        nb_maps = 20
+        markov_by_map = np.array([0.0] * nb_maps)
+        markov_exp_map = np.array([0.0] * nb_maps)
+        for k in range(nb_maps):
+
+            nb = 2000  # Nb of experiments
+            markov_result = np.array([0.0] * nb)
+            circle = False
+            layout = gen_map_with_nb(i*ewa,trap)
+            tmp = markovDecision(layout, circle)
+            markov_exp_map[k] = tmp[0][0]
+            expected[i] = tmp[0][0]
+            markov = tmp[1]
+            for j in range(nb):
+                markov_result[j] = play_game(layout, circle, markov)
+            markov_by_map[k] = np.mean(markov_result)
         print(i)
-        experimantal[i] = np.mean(markov_result)
+        expected[i] = np.mean(markov_exp_map)
+        experimantal[i] = np.mean(markov_by_map)
 
     print(experimantal)
     plt.plot(list(range(0,exp)),expected,marker='s',color="C0")
@@ -334,5 +343,5 @@ if __name__ == "__main__":
     # circle_0 = True
     # play_game(gen_map(), circle_0)
     # print(markovDecision(layout_4, circle_0))
-    simu2(4)
+    simu2(2)
 

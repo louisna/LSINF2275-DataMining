@@ -99,7 +99,9 @@ def markov_decision_matrix_normal(layout, circle):
     cost[14] = 0.0
     for i in range(14):
         if layout[i] == 3:
-            cost[i] += 1
+            cost[i] += 1.0
+        if layout[i] == 4:
+            cost[i] += 1.0/3.0
     return transition, np.transpose(cost)
 
 
