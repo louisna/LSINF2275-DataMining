@@ -204,7 +204,7 @@ def make_movement(current, dice, layout, circle):
         if trap == 0:  # Safe place
             return new, False
         if trap == 1:
-            return 1, False  # Go back to start
+            return 0, False  # Go back to start
         if trap == 2:
             # Pay attention to if it is the fast path
             if 10 <= new <= 12:
@@ -212,7 +212,7 @@ def make_movement(current, dice, layout, circle):
             else:
                 return max(0, new-3), False
         if trap == 3:
-            return new, True  # J'AI MIS CA COMME CA MAIS CA PUE EN VRAI
+            return new, True  # Maybe find a better idea
         else:
             raise ArithmeticError  # Should not happen
 
@@ -231,7 +231,7 @@ def gen_map_with_probabilities(prob,trap):
     """
     m = [0] * 15
     for i in range(1, 14):
-        if random.randint(0,100) <= prob:
+        if random.randint(0, 100) <= prob:
             m[i] = trap
     return m
 
@@ -243,7 +243,7 @@ def gen_map_with_nb(nb,trap):
     m = [0] * 15
     for i in range(0, nb):
         while True:
-            case = random.randint(1, 14)
+            case = random.randint(1, 13)
             if m[case] == 0:
                 m[case] = trap
                 break
@@ -303,7 +303,7 @@ def simu(trap):
     plt.show()
 
 def simu2(trap):
-    exp = 14
+    exp = 13
     ewa = 1
     expected = np.array([0.0] * exp)
     experimantal = np.array([0.0] * exp)
@@ -313,10 +313,10 @@ def simu2(trap):
         markov_exp_map = np.array([0.0] * nb_maps)
         for k in range(nb_maps):
 
-            nb = 2000  # Nb of experiments
+            nb = 10000  # Nb of experiments
             markov_result = np.array([0.0] * nb)
             circle = False
-            layout = gen_map_with_nb(i*ewa,trap)
+            layout = gen_map_with_nb(i*ewa, trap)
             tmp = markovDecision(layout, circle)
             markov_exp_map[k] = tmp[0][0]
             expected[i] = tmp[0][0]
@@ -329,8 +329,9 @@ def simu2(trap):
         experimantal[i] = np.mean(markov_by_map)
 
     print(experimantal)
-    plt.plot(list(range(0,exp)),expected,marker='s',color="C0")
-    plt.plot(list(range(0,exp)),experimantal,marker='^',color="C1")
+    plt.plot(list(range(0, exp)), expected, marker='s', color="C0", label="Expected")
+    plt.plot(list(range(0, exp)), experimantal, marker='^', color="C1", label="Experimental")
+    plt.legend()
     plt.show()
 
 if __name__ == "__main__":
@@ -343,5 +344,25 @@ if __name__ == "__main__":
     # circle_0 = True
     # play_game(gen_map(), circle_0)
     # print(markovDecision(layout_4, circle_0))
-    simu2(2)
+    simu2(4)
+
+    """
+    m = gen_map_with_nb(7, 2)
+    e1, d1 = markovDecision_matrix(m, False)
+    print('-----')
+    e2, d2 = markovDecision(m, False)
+
+    print("dice:", d1 == d2)
+    print("good dice", d1)
+    e = e1 - e2
+    print("expect:", np.mean(e) < 0.1)
+    if np.mean(e) >= 0.1:
+        print(e1)
+        print('------')
+        print(e2)
+        print('------------------')
+        print(m)
+    """
+
+
 
