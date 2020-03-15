@@ -100,7 +100,7 @@ def trap_probability(Old, pos_arrival, layout, circle):
         pos_trap_2 = pos_arrival - 3
     traps[2] = Old[max(0, pos_trap_2)]
     traps[3] = 1 + Old[pos_arrival]
-    traps[4] = tier * sum(traps[0:3])
+    traps[4] = tier * sum(traps[1:4])
     return traps[layout[pos_arrival]]
 
 
