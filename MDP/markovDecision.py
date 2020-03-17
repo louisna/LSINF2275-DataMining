@@ -152,6 +152,8 @@ def play_game(layout, circle, dice_strategy):
 
     while (circle and current != 14) or (not circle and current < 14):
         turn += 1
+        if turn > 50:
+            return 50
         if freeze:
             freeze = False
             continue  # Frozen
@@ -224,7 +226,8 @@ def gen_map():
             m[i] = random.randint(1, 4)
     return m
 
-def gen_map_with_probabilities(prob,trap):
+
+def gen_map_with_probabilities(prob, trap):
     """
     prob == [0,100]
     trap == [1,4]
@@ -235,7 +238,8 @@ def gen_map_with_probabilities(prob,trap):
             m[i] = trap
     return m
 
-def gen_map_with_nb(nb,trap):
+
+def gen_map_with_nb(nb, trap):
     """
     prob == [1,13]
     trap == [1,4]
@@ -245,14 +249,16 @@ def gen_map_with_nb(nb,trap):
         while True:
             case = random.randint(1, 13)
             if m[case] == 0:
-                m[case] = trap
+                if trap == 5:
+                    m[case] = random.randint(1, 4)
                 break
     return m
 
+
 def box_plot():
     circle = False
-    layout = gen_map_with_probabilities(20,1)
-    print("map",layout)
+    layout = gen_map_with_probabilities(20, 1)
+    print("map", layout)
     always_safe = safe_dice()
     always_normal = normal_dice()
     always_random = random_dice()
@@ -270,50 +276,103 @@ def box_plot():
         random_result[i] = play_game(layout, circle, always_random)
         markov_result[i] = play_game(layout, circle, markov)
 
-    plt.boxplot([markov_result, safe_result, normal_result, random_result], showmeans=True, meanline=True, showfliers=False)
+    plt.boxplot([markov_result, safe_result, normal_result, random_result], showmeans=True, meanline=True,
+                showfliers=False)
     plt.title("Boxplot of empirical cost for the 4 strategies")
     plt.xticks([1, 2, 3, 4], ['Markov', 'Always safe', 'Always normal', 'Always random'])
     plt.ylabel("Experimental cost")
     plt.show()
 
 
-def simu(trap):
-    exp = 100
-    ewa = 1
+def simu(trap, circle=False):
+    exp = 21
+    step = 5
     expected = np.array([0.0] * exp)
-    experimantal = np.array([0.0] * exp)
-    for i in range(0,exp):
-        nb = 2000  # Nb of experiments
-        markov_result = np.array([0.0] * nb)
-        expected_result = np.array([0.0] * nb)
-        for j in range(nb):
-            circle = False
-            layout = gen_map_with_probabilities(i*ewa,trap)
-            tmp = markovDecision(layout, circle)
-            expected_result[j] = tmp[0][0]
-            markov = tmp[1]
-            markov_result[j] = play_game(layout, circle, markov)
-        print(i)
-        expected[i] = np.mean(expected_result)
-        experimantal[i] = np.mean(markov_result)
-
-    print(experimantal)
-    plt.plot(list(range(0,exp)),expected,marker='s',color="C0")
-    plt.plot(list(range(0,exp)),experimantal,marker='^',color="C1")
-    plt.show()
-
-def simu2(trap):
-    exp = 13
-    ewa = 1
-    expected = np.array([0.0] * exp)
-    experimantal = np.array([0.0] * exp)
+    experimental = np.array([0.0] * exp)
+    always_one = np.array([0.0] * exp)
+    always_two = np.array([0.0] * exp)
+    always_random = np.array([0.0] * exp)
+    one = safe_dice()
+    two = normal_dice()
     for i in range(exp):
+        ran = random_dice()
         nb_maps = 20
         markov_by_map = np.array([0.0] * nb_maps)
         markov_exp_map = np.array([0.0] * nb_maps)
+        always_one_by_map = np.array([0.0] * nb_maps)
+        always_two_by_map = np.array([0.0] * nb_maps)
+        always_random_by_map = np.array([0.0] * nb_maps)
         for k in range(nb_maps):
+            nb = 300  # Nb of experiments
+            markov_result = np.array([0.0] * nb)
+            layout = gen_map_with_probabilities(i * step, trap)
+            tmp = markovDecision(layout, circle)
+            markov_exp_map[k] = tmp[0][0]
+            expected[i] = tmp[0][0]
+            markov = tmp[1]
+            one_result = np.array([0.0] * nb)
+            two_result = np.array([0.0] * nb)
+            random_result = np.array([0.0] * nb)
+            for j in range(nb):
+                markov_result[j] = play_game(layout, circle, markov)
+                one_result[j] = play_game(layout, circle, one)
+                two_result[j] = play_game(layout, circle, two)
+                random_result[j] = play_game(layout, circle, ran)
 
-            nb = 10000  # Nb of experiments
+            markov_by_map[k] = np.mean(markov_result)
+            always_one_by_map[k] = np.mean(one_result)
+            always_two_by_map[k] = np.mean(two_result)
+            always_random_by_map[k] = np.mean(random_result)
+        print(i)
+        expected[i] = np.mean(markov_exp_map)
+        experimental[i] = np.mean(markov_by_map)
+        always_one[i] = np.mean(always_one_by_map)
+        always_two[i] = np.mean(always_two_by_map)
+        always_random[i] = np.mean(always_random_by_map)
+
+    print(experimental)
+    plt.plot(list(range(0, exp)), expected, marker='s', color="C0",
+             label="Expected", alpha=1.0, linestyle='dashed')
+    plt.plot(list(range(0, exp)), experimental, marker='^', color="C1",
+             label="Experimental", alpha=0.8, linestyle='dashed')
+
+    plt.plot(list(range(0, exp)), always_one, marker='o', color="C2", markersize=7,
+             label="Always safe", alpha=0.8, linestyle='dashed')
+    plt.plot(list(range(0, exp)), always_two, marker='D', color="C3", markersize=6,
+             label="Always normal", alpha=0.7, linestyle='dashed')
+    plt.plot(list(range(0, exp)), always_random, marker='X', color="C4", markersize=5,
+             label="Always random", alpha=0.6, linestyle='dashed')
+
+    plt.ylim(top=20)
+    plt.legend()
+    plt.xlabel("Number of traps on the map")
+    plt.ylabel("Number of turns to finish the game")
+    plt.title("Map only composed of traps of type " + str(trap) + " with circle=" + str(circle))
+    plt.grid()
+    # plt.savefig("exp_vs_exp_perct_" + str(trap) + "_" + str(circle) + ".svg")
+    plt.show()
+
+
+def simu2(trap, circle=False):
+    exp = 13
+    ewa = 1
+    expected = np.array([0.0] * exp)
+    experimental = np.array([0.0] * exp)
+    always_one = np.array([0.0] * exp)
+    always_two = np.array([0.0] * exp)
+    always_random = np.array([0.0] * exp)
+    one = safe_dice()
+    two = normal_dice()
+    for i in range(exp):
+        ran = random_dice()
+        nb_maps = 30
+        markov_by_map = np.array([0.0] * nb_maps)
+        markov_exp_map = np.array([0.0] * nb_maps)
+        always_one_by_map = np.array([0.0] * nb_maps)
+        always_two_by_map = np.array([0.0] * nb_maps)
+        always_random_by_map = np.array([0.0] * nb_maps)
+        for k in range(nb_maps):
+            nb = 400  # Nb of experiments
             markov_result = np.array([0.0] * nb)
             circle = False
             layout = gen_map_with_nb(i*ewa, trap)
@@ -321,18 +380,48 @@ def simu2(trap):
             markov_exp_map[k] = tmp[0][0]
             expected[i] = tmp[0][0]
             markov = tmp[1]
+            one_result = np.array([0.0] * nb)
+            two_result = np.array([0.0] * nb)
+            random_result = np.array([0.0] * nb)
             for j in range(nb):
                 markov_result[j] = play_game(layout, circle, markov)
+                one_result[j] = play_game(layout, circle, one)
+                two_result[j] = play_game(layout, circle, two)
+                random_result[j] = play_game(layout, circle, ran)
+
             markov_by_map[k] = np.mean(markov_result)
+            always_one_by_map[k] = np.mean(one_result)
+            always_two_by_map[k] = np.mean(two_result)
+            always_random_by_map[k] = np.mean(random_result)
         print(i)
         expected[i] = np.mean(markov_exp_map)
-        experimantal[i] = np.mean(markov_by_map)
+        experimental[i] = np.mean(markov_by_map)
+        always_one[i] = np.mean(always_one_by_map)
+        always_two[i] = np.mean(always_two_by_map)
+        always_random[i] = np.mean(always_random_by_map)
 
-    print(experimantal)
-    plt.plot(list(range(0, exp)), expected, marker='s', color="C0", label="Expected")
-    plt.plot(list(range(0, exp)), experimantal, marker='^', color="C1", label="Experimental")
+    print(experimental)
+    plt.plot(list(range(0, exp)), expected, marker='s', color="C0",
+             label="Expected", alpha=1.0, linestyle='dashed')
+    plt.plot(list(range(0, exp)), experimental, marker='^', color="C1",
+             label="Experimental", alpha=0.8, linestyle='dashed')
+
+    plt.plot(list(range(0, exp)), always_one, marker='o', color="C2", markersize=7,
+             label="Always safe", alpha=0.8, linestyle='dashed')
+    plt.plot(list(range(0, exp)), always_two, marker='D', color="C3", markersize=6,
+             label="Always normal", alpha=0.7, linestyle='dashed')
+    plt.plot(list(range(0, exp)), always_random, marker='X', color="C4", markersize=5,
+             label="Always random", alpha=0.6, linestyle='dashed')
+
+    plt.ylim(top=20)
     plt.legend()
+    plt.xlabel("Number of traps on the map")
+    plt.ylabel("Number of turns to finish the game")
+    plt.title("Map only composed of traps of type " + str(trap) + " with circle=" + str(circle))
+    plt.grid()
+    # plt.savefig("exp_vs_exp_" + str(trap) + "_" + str(circle) + ".svg")
     plt.show()
+
 
 if __name__ == "__main__":
     # layout_0 = np.array([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
@@ -344,25 +433,5 @@ if __name__ == "__main__":
     # circle_0 = True
     # play_game(gen_map(), circle_0)
     # print(markovDecision(layout_4, circle_0))
-    simu2(4)
-
-    """
-    m = gen_map_with_nb(7, 2)
-    e1, d1 = markovDecision_matrix(m, False)
-    print('-----')
-    e2, d2 = markovDecision(m, False)
-
-    print("dice:", d1 == d2)
-    print("good dice", d1)
-    e = e1 - e2
-    print("expect:", np.mean(e) < 0.1)
-    if np.mean(e) >= 0.1:
-        print(e1)
-        print('------')
-        print(e2)
-        print('------------------')
-        print(m)
-    """
-
-
-
+    # simu(1)
+    simu2(5, circle=True)

@@ -2,10 +2,11 @@ import numpy as np
 
 epsilon = 10 ** (-6)
 
+
 def markovDecision_matrix(layout, circle):
     safe, safe_cost = markov_decision_matrix_safe(layout, circle)
     normal, normal_cost = markov_decision_matrix_normal(layout, circle)
-
+    print(normal_cost)
     Dice = np.array([0] * 14)
     Expec = np.array([10.] * 15)
     Expec[14] = 0
@@ -19,9 +20,9 @@ def markovDecision_matrix(layout, circle):
             Old = Expec.copy()
         count += 1
         Expec = np.array([0.0] * 15)
-        expec_safe = np.dot(safe, Old + safe_cost)
-        #print(safe_cost)
-        expec_normal = np.dot(normal, Old + normal_cost)
+        expec_safe = np.dot(safe, Old) + safe_cost
+        # print(safe_cost)
+        expec_normal = np.dot(normal, Old) + normal_cost
         for i in range(14):
             if expec_safe[i] < expec_normal[i]:
                 Expec[i] = expec_safe[i]
@@ -32,6 +33,7 @@ def markovDecision_matrix(layout, circle):
         Expec[14] = 0.0
     # print("###########################################")
     return Expec, Dice
+
 
 def markov_decision_matrix_safe(layout, circle):
     nb = len(layout)
@@ -60,7 +62,6 @@ def markov_decision_matrix_safe(layout, circle):
 def markov_decision_matrix_normal(layout, circle):
     nb = len(layout)
     transition = np.zeros((nb, nb))
-    tier = 1 / 3
 
     # First compute the entry for the last square of the layout
     a = [0.0] * 15
