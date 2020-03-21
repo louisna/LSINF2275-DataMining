@@ -489,7 +489,6 @@ def plot_convergence():
     plt.show()
 
 
-
 if __name__ == "__main__":
     # layout_0 = np.array([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
     # layout_1 = np.array([0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0])
@@ -498,13 +497,11 @@ if __name__ == "__main__":
     # layout_4 = np.array([0, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 0])
     # layout_5 = np.array([0, 4, 0, 1, 0, 2, 3, 4, 0, 0, 2, 1, 0, 4, 0])
     # circle_0 = False
-    #play_game(layout_0, circle_0, markovDecision())
+    # play_game(layout_0, circle_0, markovDecision())
     # print(markovDecision_matrix(layout_0, circle_0))
-    # simu2(1)
+    simu2(1)
     # for i in range(1, 5):
     #     simu2(i, circle=False)
     # for i in range(1, 5):
     #     simu2(i, circle=True)
-    #plot_convergence()
-    m = np.array([0] * 15)
-    print(markovDecision(m, True))
+    # plot_convergence()
