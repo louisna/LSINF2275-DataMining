@@ -6,7 +6,7 @@ epsilon = 10 ** (-6)
 def markovDecision_matrix(layout, circle):
     safe, safe_cost = markov_decision_matrix_safe(layout, circle)
     normal, normal_cost = markov_decision_matrix_normal(layout, circle)
-    print(normal_cost)
+    # print(normal_cost)
     Dice = np.array([0] * 14)
     Expec = np.array([10.] * 15)
     Expec[14] = 0
@@ -22,7 +22,7 @@ def markovDecision_matrix(layout, circle):
         Expec = np.array([0.0] * 15)
         expec_safe = np.dot(safe, Old) + safe_cost
         # print(safe_cost)
-        expec_normal = np.dot(normal, Old) + normal_cost
+        expec_normal = np.dot(normal, Old + normal_cost) + safe_cost
         for i in range(14):
             if expec_safe[i] < expec_normal[i]:
                 Expec[i] = expec_safe[i]
@@ -32,7 +32,7 @@ def markovDecision_matrix(layout, circle):
                 Dice[i] = 2
         Expec[14] = 0.0
     # print("###########################################")
-    return Expec, Dice
+    return Expec[:-1], Dice
 
 
 def markov_decision_matrix_safe(layout, circle):
@@ -95,7 +95,7 @@ def markov_decision_matrix_normal(layout, circle):
         else:
             trap_probability_matrix(i+2, layout, circle, b)
         transition[i] = b
-    cost = np.ones(15)
+    cost = np.zeros(15)
     cost[14] = 0.0
     for i in range(14):
         if layout[i] == 3:
