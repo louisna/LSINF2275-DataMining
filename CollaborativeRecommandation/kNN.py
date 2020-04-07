@@ -95,7 +95,7 @@ def build_R_from_DB(splits):
 
     for split in splits:
         for user, item, rating in split:
-            R[int(user), int(item)] = int(rating)
+            R[int(user)-1, int(item)-1] = int(rating)
     
     return R
 
@@ -109,6 +109,7 @@ def cross_validation(DB, k, n_cross=10):
     for v in range(n_cross):
         # v is the testo set, splitted[-v] is the training set
         R = build_R_from_DB(split[:v] + split[v+1:])
+        #R_test = build_R_from_DB(split[v])
         R_hat = kNN(R, k)
         nrow, ncol = R.shape
         MSE = 0.0
@@ -160,7 +161,7 @@ def open_file(filepath):
 
 if __name__ == "__main__":
     R, DB = open_file("ml-100k/u.data")
-    #R_hat = kNN(result,2)
+    #R_hat = kNN(R,2)
     #num_rows, num_cols = R_hat.shape
     #print(R_hat)
     #print(R_hat[:,num_cols-1])
