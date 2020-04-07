@@ -18,19 +18,16 @@ def kNN(R,k): # R = numpy matix
             else :
                 v[j] = 0
         V.append(v)
-
+    #print(V)
 
     nearest_neighbours = []
     for i in range(num_rows):
         kbest = [] # (similitude, number of client)
         for ii in range(num_rows):
             if i != ii :
-                minimal = sys.maxint
-                for elem in kbest:
-                    if minimal > elem[0]:
-                        minimal = elem[0]
+                kbest.sort( key=lambda t: t[0])
                 sim = sim_cosine(V[i],V[ii])
-                if len(kbest) >= k and sim > minimal :
+                if len(kbest) >= k and sim > kbest[0][0] :
                     kbest[0] = (sim, ii)
                 elif len(kbest) < k :
                     kbest.append((sim, ii))
@@ -39,12 +36,12 @@ def kNN(R,k): # R = numpy matix
     R_hat = np.zeros((num_rows, num_cols))
     for i in range(num_rows):
         for j in range(num_cols):
-            sum = 0
+            denom = 0
             pred = 0
             for e in nearest_neighbours[i]:
-                sum += e[0]
-                pred += e[0] * R[e[0],j]
-            pred /= sum
+                denom += e[0]
+                pred += e[0] * R[e[1],j]
+            pred /= denom
             R_hat[i,j] = pred
 
     return R_hat
@@ -83,4 +80,7 @@ def open_file(filepath):
 
 if __name__ == "__main__":
     R = open_file("ml-100k/u.data")
-    print(kNN(result,2))
+    R_hat = kNN(R,10)
+    num_rows, num_cols = R_hat.shape
+    print(R_hat)
+    print(R_hat[:,num_cols-1])
