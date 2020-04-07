@@ -62,16 +62,6 @@ def kNN(R,k): # R = numpy matix
 def sim_cosine(i,p): # i and p are numpy verctors i ==
     return np.dot(i.T,p)/(len(i)*len(p))
 
-def min(kbest):
-    min_sim = sys.maxsize
-    index = -1
-    for i in range(len(kbest)):
-        elem = kbest[i]
-        if elem[0] < min_sim:
-            min_sim = elem[0]
-            index = i
-    return (min_sim, index)
-
 
 
 
