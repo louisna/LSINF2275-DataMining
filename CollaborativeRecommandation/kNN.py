@@ -64,7 +64,7 @@ def sim_cosine(i,p): # i and p are numpy verctors i ==
     return np.dot(i.T,p)/(len(i)*len(p))
 
 
-def split_ratings(nrow, cross=10):
+def split_ratings(DB,nrow=100000, cross=10):
 
     split = []
 
@@ -77,25 +77,38 @@ def split_ratings(nrow, cross=10):
         split.append([total[j] for j in index_sample])
         total = [total[j] for j in range(len(total)) if j not in index_sample]
     split.append(list(total))
-    return split
+    split_DB = []
+    for spl in split:
+        a = [DB[i,:] for i in spl]
+    return a
 
 
+def build_R_from_DB(splits):
+    nb_ratings = 100000
+    nb_users = 943
+    nb_items = 1682
 
-def cross_validation(R, k, n_cross=10):
+    # Create the rating matrix
+    R = np.zeros((nb_users, nb_items))
+
+    for split in splits:
+        for user, item, rating in split:
+            R[user, item] = rating
+    
+    return R
+
+
+def cross_validation(DB, k, n_cross=10):
     nrow, ncol = R.shape
     MSE_g = np.zeros(10)
     MAE_g = np.zeros(10)
 
     split= split_ratings(nrow, n_cross)
-    print(split)
 
     for v in range(n_cross):
         # v is the testo set, splitted[-v] is the training set
-        Rcopy = np.matrix.copy(R)
-        for i in split[v]:
-            for j in range(ncol):
-                Rcopy[i,j] = 0.0
-        R_hat = kNN(Rcopy, k)
+        R = build_R_from_DB(split[-v])
+        R_hat = kNN(R, k)
         MSE = 0.0
         MAE = 0.0
         for i in split[v]:
@@ -104,6 +117,8 @@ def cross_validation(R, k, n_cross=10):
                 MAE += abs(R[i,j] - R_hat[i,j])
         MSE /= len(split[v])
         MAE /= len(split[v])
+        MSE_g[v] = MSE
+        MAE_g[v] = MAE
 
     MSE = np.mean(MSE_g)
     MAE = np.mean(MAE_g)
@@ -122,25 +137,30 @@ def open_file(filepath):
     nb_users = 943
     nb_items = 1682
 
+    DB = np.zeros((nb_ratings, 3))
+
     # Create the rating matrix
     R = np.zeros((nb_users, nb_items))
 
     with open(filepath, "r") as fd:
+        count = 0
         for line in fd:
             if not line or line == "\n":
                 continue
             user_id, item_id, rating, timestamp = list(line.split('\t'))
             R[int(user_id)-1, int(item_id)-1] = int(rating)
+            DB[count] = np.array([int(user_id), int(item_id, int(rating))])
+            count += 1
 
-    return R
+    return R, DB
 
 
 if __name__ == "__main__":
-    R = open_file("ml-100k/u.data")
+    R, DB = open_file("ml-100k/u.data")
     #R_hat = kNN(result,2)
     #num_rows, num_cols = R_hat.shape
     #print(R_hat)
     #print(R_hat[:,num_cols-1])
     #print(split_ratings(R))
-    print(cross_validation(R, 3, 2))
+    print(cross_validation(R, 3))
     # print(split_ratings(100, cross=40))
