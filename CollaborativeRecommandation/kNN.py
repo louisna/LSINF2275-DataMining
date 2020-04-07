@@ -1,4 +1,5 @@
 import numpy as np
+import sys
 
 # first ligne == user  second colonne == item
 
@@ -24,9 +25,12 @@ def kNN(R,k): # R = numpy matix
         kbest = [] # (similitude, number of client)
         for ii in range(num_rows):
             if i != ii :
-                kbest.sort(key=lambda t: t[0])
+                minimal = sys.maxint
+                for elem in kbest:
+                    if minimal > elem[0]:
+                        minimal = elem[0]
                 sim = sim_cosine(V[i],V[ii])
-                if len(kbest) >= k and sim > kbest[0] :
+                if len(kbest) >= k and sim > minimal :
                     kbest[0] = (sim, ii)
                 elif len(kbest) < k :
                     kbest.append((sim, ii))
