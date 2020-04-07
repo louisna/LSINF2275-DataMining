@@ -1,5 +1,6 @@
 import numpy as np
 import sys
+import random
 from queue import PriorityQueue
 # first ligne == user  second colonne == item
 
@@ -40,7 +41,7 @@ def kNN(R,k): # R = numpy matix
                     kbestPQ.put((sim, ii)) # O(logn) instead O(1)
                 else :
                     kbestPQ.put(e) # O(logn) instead O(1)
-        kbest = [] 
+        kbest = []
         while(not kbestPQ.empty()):
             kbest.append(kbestPQ.get())
         nearest_neighbours.append(kbest)
@@ -51,7 +52,7 @@ def kNN(R,k): # R = numpy matix
         for j in range(num_cols):
             denom = 0
             pred = 0
-            for e in nearest_neighbours[i]: # here PQ is inefficient because must creat a new PQ 
+            for e in nearest_neighbours[i]: # here PQ is inefficient because must creat a new PQ
                 denom += e[0]
                 pred += e[0] * R[e[1],j]
             pred /= denom
@@ -61,6 +62,53 @@ def kNN(R,k): # R = numpy matix
 
 def sim_cosine(i,p): # i and p are numpy verctors i ==
     return np.dot(i.T,p)/(len(i)*len(p))
+
+
+def split_ratings(nrow, cross=10):
+
+    split = []
+
+    total = list(range(nrow))
+
+    for i in range(cross-1):
+        length = round(len(total)/(cross-i))
+        index_sample = random.sample(range(len(total)), length)
+        print(len(index_sample))
+        split.append([total[j] for j in index_sample])
+        total = [total[j] for j in range(len(total)) if j not in index_sample]
+    split.append(list(total))
+    return split
+
+
+
+def cross_validation(R, k, n_cross=10):
+    nrow, ncol = R.shape
+    MSE_g = np.zeros(10)
+    MAE_g = np.zeros(10)
+
+    split= split_ratings(nrow, n_cross)
+    print(split)
+
+    for v in range(n_cross):
+        # v is the testo set, splitted[-v] is the training set
+        Rcopy = np.matrix.copy(R)
+        for i in split[v]:
+            for j in range(ncol):
+                Rcopy[i,j] = 0.0
+        R_hat = kNN(Rcopy, k)
+        MSE = 0.0
+        MAE = 0.0
+        for i in split[v]:
+            for j in range(ncol):
+                MSE += (R[i,j] - R_hat[i,j]) ** 2
+                MAE += abs(R[i,j] - R_hat[i,j])
+        MSE /= len(split[v])
+        MAE /= len(split[v])
+
+    MSE = np.mean(MSE_g)
+    MAE = np.mean(MAE_g)
+
+    return MSE, MAE
 
 
 
@@ -89,7 +137,10 @@ def open_file(filepath):
 
 if __name__ == "__main__":
     R = open_file("ml-100k/u.data")
-    R_hat = kNN(result,2)
-    num_rows, num_cols = R_hat.shape
-    print(R_hat)
-    print(R_hat[:,num_cols-1])
+    #R_hat = kNN(result,2)
+    #num_rows, num_cols = R_hat.shape
+    #print(R_hat)
+    #print(R_hat[:,num_cols-1])
+    #print(split_ratings(R))
+    print(cross_validation(R, 3, 2))
+    # print(split_ratings(100, cross=40))
