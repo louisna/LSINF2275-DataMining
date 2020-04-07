@@ -109,15 +109,15 @@ def cross_validation(DB, k, n_cross=10):
     for v in range(n_cross):
         # v is the testo set, splitted[-v] is the training set
         R = build_R_from_DB(split[:v] + split[v+1:])
-        #R_test = build_R_from_DB(split[v])
+        R_test = build_R_from_DB([split[v]])
         R_hat = kNN(R, k)
-        nrow, ncol = R.shape
+        nrow, ncol = R_test.shape
         MSE = 0.0
         MAE = 0.0
         for i in range(nrow):
             for j in range(ncol):
-                MSE += (R[i,j] - R_hat[i,j]) ** 2
-                MAE += abs(R[i,j] - R_hat[i,j])
+                MSE += (R_test[i,j] - R_hat[i,j]) ** 2
+                MAE += abs(R_test[i,j] - R_hat[i,j])
         MSE /= len(split[v])
         MAE /= len(split[v])
         MSE_g[v] = MSE
