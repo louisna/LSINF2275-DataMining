@@ -64,27 +64,29 @@ def sim_cosine(i,p): # i and p are numpy verctors i ==
     return np.dot(i.T,p)/(len(i)*len(p))
 
 
-def split_ratings(DB,nrow=100000, cross=10):
+def split_ratings(DB, cross=10):
 
     split = []
+    nrow, _ = DB.shape
 
     total = list(range(nrow))
 
     for i in range(cross-1):
         length = round(len(total)/(cross-i))
         index_sample = random.sample(range(len(total)), length)
-        print(len(index_sample))
         split.append([total[j] for j in index_sample])
         total = [total[j] for j in range(len(total)) if j not in index_sample]
     split.append(list(total))
     split_DB = []
     for spl in split:
         a = [DB[i,:] for i in spl]
-    return a
+        split_DB.append(a)
+    return split_DB
 
 
 def build_R_from_DB(splits):
     nb_ratings = 100000
+    # nb_ratings = 23
     nb_users = 943
     nb_items = 1682
 
@@ -93,25 +95,25 @@ def build_R_from_DB(splits):
 
     for split in splits:
         for user, item, rating in split:
-            R[user, item] = rating
+            R[int(user), int(item)] = int(rating)
     
     return R
 
 
 def cross_validation(DB, k, n_cross=10):
-    nrow, ncol = R.shape
     MSE_g = np.zeros(10)
     MAE_g = np.zeros(10)
 
-    split= split_ratings(nrow, n_cross)
+    split = split_ratings(DB, n_cross)
 
     for v in range(n_cross):
         # v is the testo set, splitted[-v] is the training set
-        R = build_R_from_DB(split[-v])
+        R = build_R_from_DB(split[:v] + split[v+1:])
         R_hat = kNN(R, k)
+        nrow, ncol = R.shape
         MSE = 0.0
         MAE = 0.0
-        for i in split[v]:
+        for i in range(nrow):
             for j in range(ncol):
                 MSE += (R[i,j] - R_hat[i,j]) ** 2
                 MAE += abs(R[i,j] - R_hat[i,j])
@@ -134,6 +136,7 @@ def open_file(filepath):
     user id | item id | rating | timestamp
     """
     nb_ratings = 100000
+    # nb_ratings = 23
     nb_users = 943
     nb_items = 1682
 
@@ -149,7 +152,7 @@ def open_file(filepath):
                 continue
             user_id, item_id, rating, timestamp = list(line.split('\t'))
             R[int(user_id)-1, int(item_id)-1] = int(rating)
-            DB[count] = np.array([int(user_id), int(item_id, int(rating))])
+            DB[count] = np.array([int(user_id), int(item_id), int(rating)])
             count += 1
 
     return R, DB
@@ -162,5 +165,5 @@ if __name__ == "__main__":
     #print(R_hat)
     #print(R_hat[:,num_cols-1])
     #print(split_ratings(R))
-    print(cross_validation(R, 3))
+    print(cross_validation(DB, 3))
     # print(split_ratings(100, cross=40))
