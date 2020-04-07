@@ -1,16 +1,18 @@
 import numpy as np
 import sys
 import random
-
+from queue import PriorityQueue
 # first ligne == user  second colonne == item
 
 result = np.array([[1, 0, 3],
                    [2, 0, 5],
                    [0, 2, 0],
                    [2, 1, 2],
-                   [3, 3, 3]])
+                   [3, 3, 3],
+                   [2, 0, 5],])
 
 def kNN(R,k): # R = numpy matix
+    # calculing user's vector V[i] = vi in the slides
     V = [] # list de user
     num_rows, num_cols = R.shape
     for i in range(num_rows):
@@ -23,26 +25,34 @@ def kNN(R,k): # R = numpy matix
         V.append(v)
     #print(V)
 
-    nearest_neighbours = []
+    # computing the k nearest neighbours
+    nearest_neighbours = [] # nearest_neighbours[i] == k nearest neighbours of user i
     for i in range(num_rows):
-        kbest = [] # (similitude, number of client)
+        kbestPQ = PriorityQueue() # (similitude, number of client)
         for ii in range(num_rows):
             if i != ii :
                 sim = sim_cosine(V[i],V[ii])
-                if len(kbest) < k :
-                    kbest.append((sim, ii))
+                if kbestPQ.qsize() < k :
+                    kbestPQ.put((sim, ii))
                     continue
-                kbest.sort( key=lambda t: t[0])
-                if len(kbest) >= k and sim > kbest[0][0] :
-                    kbest[0] = (sim, ii)
+                # len(kbest) == k
+                e = kbestPQ.get() # O(1) instead O(nlogn)
+                if sim > e[0] :
+                    kbestPQ.put((sim, ii)) # O(logn) instead O(1)
+                else :
+                    kbestPQ.put(e) # O(logn) instead O(1)
+        kbest = []
+        while(not kbestPQ.empty()):
+            kbest.append(kbestPQ.get())
         nearest_neighbours.append(kbest)
 
+    # computing the prediction
     R_hat = np.zeros((num_rows, num_cols))
     for i in range(num_rows):
         for j in range(num_cols):
             denom = 0
             pred = 0
-            for e in nearest_neighbours[i]:
+            for e in nearest_neighbours[i]: # here PQ is inefficient because must creat a new PQ
                 denom += e[0]
                 pred += e[0] * R[e[1],j]
             pred /= denom
@@ -52,6 +62,16 @@ def kNN(R,k): # R = numpy matix
 
 def sim_cosine(i,p): # i and p are numpy verctors i ==
     return np.dot(i.T,p)/(len(i)*len(p))
+
+def min(kbest):
+    min_sim = sys.maxsize
+    index = -1
+    for i in range(len(kbest)):
+        elem = kbest[i]
+        if elem[0] < min_sim:
+            min_sim = elem[0]
+            index = i
+    return (min_sim, index)
 
 
 def split_ratings(nrow, cross=10):
@@ -78,7 +98,7 @@ def cross_validation(R, k, n_cross=10):
 
     split= split_ratings(nrow, n_cross)
     print(split)
-    
+
     for v in range(n_cross):
         # v is the testo set, splitted[-v] is the training set
         Rcopy = np.matrix.copy(R)
@@ -94,12 +114,12 @@ def cross_validation(R, k, n_cross=10):
                 MAE += abs(R[i,j] - R_hat[i,j])
         MSE /= len(split[v])
         MAE /= len(split[v])
-    
+
     MSE = np.mean(MSE_g)
     MAE = np.mean(MAE_g)
 
     return MSE, MAE
-        
+
 
 
 
