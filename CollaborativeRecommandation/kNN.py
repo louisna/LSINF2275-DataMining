@@ -63,7 +63,7 @@ def open_file(filepath):
     """
     nb_ratings = 100000
     nb_users = 943
-    nb_items = 1982
+    nb_items = 1682
 
     # Create the rating matrix
     R = np.zeros((nb_users, nb_items))
