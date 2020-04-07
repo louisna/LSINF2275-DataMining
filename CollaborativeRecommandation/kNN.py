@@ -3,9 +3,12 @@ import sys
 
 # first ligne == user  second colonne == item
 
-result = np.array([[11, 12, 13],
-                   [21, 22, 23],
-                   [31, 32, 33]])
+result = np.array([[1, 0, 3],
+                   [2, 0, 23],
+                   [31, 32, 33],
+                   [31, 32, 33],
+                   [31, 32, 33],
+                   ])
 
 def kNN(R,k): # R = numpy matix
     V = [] # list de user
@@ -25,12 +28,13 @@ def kNN(R,k): # R = numpy matix
         kbest = [] # (similitude, number of client)
         for ii in range(num_rows):
             if i != ii :
+                if len(kbest) < k :
+                    kbest.append((sim, ii))
+                    continue
                 kbest.sort( key=lambda t: t[0])
                 sim = sim_cosine(V[i],V[ii])
                 if len(kbest) >= k and sim > kbest[0][0] :
                     kbest[0] = (sim, ii)
-                elif len(kbest) < k :
-                    kbest.append((sim, ii))
         nearest_neighbours.append(kbest)
 
     R_hat = np.zeros((num_rows, num_cols))
