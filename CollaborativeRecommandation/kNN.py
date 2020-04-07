@@ -4,11 +4,10 @@ import sys
 # first ligne == user  second colonne == item
 
 result = np.array([[1, 0, 3],
-                   [2, 0, 23],
-                   [31, 32, 33],
-                   [31, 32, 33],
-                   [31, 32, 33],
-                   ])
+                   [2, 0, 5],
+                   [0, 2, 0],
+                   [2, 1, 2],
+                   [3, 3, 3]])
 
 def kNN(R,k): # R = numpy matix
     V = [] # list de user
@@ -28,11 +27,11 @@ def kNN(R,k): # R = numpy matix
         kbest = [] # (similitude, number of client)
         for ii in range(num_rows):
             if i != ii :
+                sim = sim_cosine(V[i],V[ii])
                 if len(kbest) < k :
                     kbest.append((sim, ii))
                     continue
                 kbest.sort( key=lambda t: t[0])
-                sim = sim_cosine(V[i],V[ii])
                 if len(kbest) >= k and sim > kbest[0][0] :
                     kbest[0] = (sim, ii)
         nearest_neighbours.append(kbest)
@@ -84,7 +83,7 @@ def open_file(filepath):
 
 if __name__ == "__main__":
     R = open_file("ml-100k/u.data")
-    R_hat = kNN(R,10)
+    R_hat = kNN(result,2)
     num_rows, num_cols = R_hat.shape
     print(R_hat)
     print(R_hat[:,num_cols-1])
