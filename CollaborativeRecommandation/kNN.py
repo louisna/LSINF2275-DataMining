@@ -7,7 +7,7 @@ result = np.array([[11, 12, 13],
                    [21, 22, 23],
                    [31, 32, 33]])
 
-def kNN(R,k): # R = numpy matix 
+def kNN(R,k): # R = numpy matix
     V = [] # list de user
     num_rows, num_cols = R.shape
     for i in range(num_rows):
@@ -35,7 +35,7 @@ def kNN(R,k): # R = numpy matix
                 elif len(kbest) < k :
                     kbest.append((sim, ii))
         nearest_neighbours.append(kbest)
-    
+
     R_hat = np.zeros((num_rows, num_cols))
     for i in range(num_rows):
         for j in range(num_cols):
@@ -43,13 +43,44 @@ def kNN(R,k): # R = numpy matix
             pred = 0
             for e in nearest_neighbours[i]:
                 sum += e[0]
-                pred += e[0] * R[e[0],j] 
+                pred += e[0] * R[e[0],j]
             pred /= sum
             R_hat[i,j] = pred
-    
+
     return R_hat
 
-def sim_cosine(i,p): # i and p are numpy verctors i == 
+def sim_cosine(i,p): # i and p are numpy verctors i ==
     return np.dot(i.T,p)/(len(i)*len(p))
 
-print(kNN(result,2))
+
+
+
+
+
+
+
+def open_file(filepath):
+    """
+    The pattern in the file is the following:
+    user id | item id | rating | timestamp
+    """
+    nb_ratings = 100000
+    nb_users = 943
+    nb_items = 1982
+
+    # Create the rating matrix
+    R = np.zeros((nb_users, nb_items))
+
+    with open(filepath, "r") as fd:
+        for line in fd:
+            if not line or line == "\n":
+                continue
+            user_id, item_id, rating, timestamp = list(line.split('\t'))
+            R[int(user_id)-1, int(item_id)-1] = int(rating)
+
+    return R
+
+
+if __name__ == "__main__":
+    R = open_file("ml-100k/u.data")
+    print(kNN(result,2))
