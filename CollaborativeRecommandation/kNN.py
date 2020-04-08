@@ -2,6 +2,7 @@ import numpy as np
 import sys
 import random
 from queue import PriorityQueue
+random.seed(1998)
 # first ligne == user  second colonne == item
 
 result = np.array([[1, 0, 3],
@@ -32,6 +33,8 @@ def kNN(R,k): # R = numpy matix
         for ii in range(num_rows):
             if i != ii :
                 sim = sim_cosine(V[i],V[ii])
+                #print(np.dot(V[i],V[ii].T))
+                #print(sim)
                 if kbestPQ.qsize() < k :
                     kbestPQ.put((sim, ii))
                     continue
@@ -59,6 +62,14 @@ def kNN(R,k): # R = numpy matix
             R_hat[i,j] = pred
 
     return R_hat
+
+def dummy(R):
+    num_rows, num_cols = R.shape
+    R_hat = np.ones((num_rows, num_cols))
+    for i in range(num_cols):
+        R_hat[:,i] = np.mean(R[:,i]) * R_hat[:,i]
+    return R_hat
+
 
 def sim_cosine(i,p): # i and p are numpy verctors i ==
     return np.dot(i.T,p)/(len(i)*len(p))
@@ -110,14 +121,17 @@ def cross_validation(DB, k, n_cross=10):
         # v is the testo set, splitted[-v] is the training set
         R = build_R_from_DB(split[:v] + split[v+1:])
         R_test = build_R_from_DB([split[v]])
-        R_hat = kNN(R, k)
+        print(v)
+        #R_hat = kNN(R, k)
+        R_hat = dummy(R)
         nrow, ncol = R_test.shape
         MSE = 0.0
         MAE = 0.0
         for i in range(nrow):
             for j in range(ncol):
-                MSE += (R_test[i,j] - R_hat[i,j]) ** 2
-                MAE += abs(R_test[i,j] - R_hat[i,j])
+                if R_test[i,j] != 0 :
+                    MSE += (R_test[i,j] - R_hat[i,j]) ** 2
+                    MAE += abs(R_test[i,j] - R_hat[i,j])
         MSE /= len(split[v])
         MAE /= len(split[v])
         MSE_g[v] = MSE
@@ -161,8 +175,9 @@ def open_file(filepath):
 
 if __name__ == "__main__":
     R, DB = open_file("ml-100k/u.data")
-    #R_hat = kNN(R,2)
+    #R_hat = dummy(result)
     #num_rows, num_cols = R_hat.shape
+    #print(result)
     #print(R_hat)
     #print(R_hat[:,num_cols-1])
     #print(split_ratings(R))
