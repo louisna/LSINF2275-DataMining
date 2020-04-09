@@ -12,10 +12,10 @@ result = np.array([[1, 0, 3],
                    [3, 3, 3],
                    [2, 0, 5]])
 
-sim_dico = {}
 
 def kNN(R,k): # R = numpy matix
     # calculing user's vector V[i] = vi in the slides
+    sim_dico = {}
     V = [] # list de user
     num_rows, num_cols = R.shape
     for i in range(num_rows):
@@ -35,7 +35,12 @@ def kNN(R,k): # R = numpy matix
         kbestPQ = PriorityQueue() # (similitude, number of client)
         for ii in range(num_rows):
             if i != ii :
-                sim = sim_1(V[i],V[ii])
+                sim = sim_dico.get((i,ii),-1)
+                if (sim == -1):
+                    sim = sim_dico.get((ii,i),-1)
+                    if (sim == -1):
+                        sim = sim_cosine(V[i],V[ii])
+                    sim_dico[(i,ii)]  = sim
                 #print(sim)
                 #print(np.dot(V[i],V[ii].T))
                 #print(sim)
@@ -253,7 +258,7 @@ if __name__ == "__main__":
     #print(R_hat[:,num_cols-1])
     #print(split_ratings(R))
     print(cross_validation(DB, 3))
-    # print(split_ratings(100, cross=40))
+    #print(split_ratings(100, cross=40))
     #print(len(result))
 
 # (3.7827014565738692, 1.5766381749075415)  cosine + V binary
