@@ -17,6 +17,7 @@ sim_dico = {}
 def kNN(R,k): # R = numpy matix
     # calculing user's vector V[i] = vi in the slides
     V = [] # list de user
+    print('debut')
     num_rows, num_cols = R.shape
     for i in range(num_rows):
         v = np.array([0.0]*num_cols)
@@ -35,7 +36,7 @@ def kNN(R,k): # R = numpy matix
         kbestPQ = PriorityQueue() # (similitude, number of client)
         for ii in range(num_rows):
             if i != ii :
-                sim = sim_1(V[i],V[ii])
+                sim = sim_cosine(V[i],V[ii])
                 #print(sim)
                 #print(np.dot(V[i],V[ii].T))
                 #print(sim)
@@ -67,6 +68,8 @@ def kNN(R,k): # R = numpy matix
             else:
                 pred /= denom
             R_hat[i,j] = pred
+    
+    print('fin')
 
     return R_hat
 
@@ -153,6 +156,7 @@ def split_ratings(DB, cross=10):
     total = list(range(nrow))
 
     for i in range(cross-1):
+        print(i)
         length = round(len(total)/(cross-i))
         index_sample = random.sample(range(len(total)), length)
         split.append([total[j] for j in index_sample])
@@ -163,6 +167,37 @@ def split_ratings(DB, cross=10):
         a = [DB[i,:] for i in spl]
         split_DB.append(a)
     return split_DB
+
+
+def load_indexes(DB, cross=10, filepath="ml-100k/u.data"):
+    filepath = filepath[:-5] + "_indexes.data"
+    try:
+        with open(filepath, "r") as fd:
+            split = []
+            n = []
+            for line in fd:
+                if line == '\n':
+                    if n != []:
+                        split.append(n)
+                    n = []
+                    continue
+                a = line.split('\t')
+                n.append(np.array([float(a[0]), float(a[1]), float(a[2])]))
+            if n != []:
+                split.append(n)
+            return split
+    except IOError:
+        print("No such file", filepath)
+    split_DB = split_ratings(DB, cross)
+    with open(filepath, "w+") as fd:
+        for s in split_DB:
+            for i in s:
+                fd.write("" + str(i[0]) + "\t" + str(i[1]) + "\t" + str(i[2]) + "\t" + str(1234567890)+"\n")
+            fd.write('\n')
+            print('ok')
+    print("rip")
+    return split_DB
+            
 
 
 def build_R_from_DB(splits):
@@ -185,7 +220,7 @@ def cross_validation(DB, k, n_cross=10):
     MSE_g = np.zeros(10)
     MAE_g = np.zeros(10)
 
-    split = split_ratings(DB, n_cross)
+    split = load_indexes(DB, n_cross)
 
     for v in range(n_cross):
         # v is the testo set, splitted[-v] is the training set
