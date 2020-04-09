@@ -10,7 +10,9 @@ result = np.array([[1, 0, 3],
                    [0, 2, 0],
                    [2, 1, 2],
                    [3, 3, 3],
-                   [2, 0, 5],])
+                   [2, 0, 5]])
+
+sim_dico = {}
 
 def kNN(R,k): # R = numpy matix
     # calculing user's vector V[i] = vi in the slides
@@ -20,6 +22,7 @@ def kNN(R,k): # R = numpy matix
         v = np.array([0.0]*num_cols)
         for j in range(num_cols):
             if R[i,j] > 0:
+                #v[j] = R[i,j] # slight better result with sim_cosine
                 v[j] = 1
             else :
                 v[j] = 0
@@ -32,7 +35,8 @@ def kNN(R,k): # R = numpy matix
         kbestPQ = PriorityQueue() # (similitude, number of client)
         for ii in range(num_rows):
             if i != ii :
-                sim = sim_cosine(V[i],V[ii])
+                sim = sim_1(V[i],V[ii])
+                #print(sim)
                 #print(np.dot(V[i],V[ii].T))
                 #print(sim)
                 if kbestPQ.qsize() < k :
@@ -56,9 +60,12 @@ def kNN(R,k): # R = numpy matix
             denom = 0
             pred = 0
             for e in nearest_neighbours[i]: # here PQ is inefficient because must creat a new PQ
-                denom += e[0]
+                denom += abs(e[0])
                 pred += e[0] * R[e[1],j]
-            pred /= denom
+            if denom == 0:
+                pred = 0
+            else:
+                pred /= denom
             R_hat[i,j] = pred
 
     return R_hat
@@ -70,8 +77,71 @@ def dummy(R):
         R_hat[:,i] = np.mean(R[:,i]) * R_hat[:,i]
     return R_hat
 
+def confusion_matrix(vi,vj):
+    conf = np.zeros((2, 2))
+    for i in range(len(vi)):
+        conf[int(vi[i]),int(vj[i])] +=  1
+    return (conf[0,0], conf[0,1], conf[1,0], conf[1,1]) # slide 153 (a b c d)
 
-def sim_cosine(i,p): # i and p are numpy verctors i ==
+#similitude slide 154
+def sim_1(i,p):
+    (a,b,c,d) = confusion_matrix(i,p)
+    if (a+b+c+d)== 0:
+        return 0.0
+    else:
+        return (a+d)/(a+b+c+d)
+
+def sim_2(i,p):
+    (a,b,c,d) = confusion_matrix(i,p)
+    if (2*(a+d)+b+c) == 0:
+        return 0.0
+    else:
+        return 2*(a+d)/(2*(a+d)+b+c)
+
+def sim_3(i,p):
+    (a,b,c,d) = confusion_matrix(i,p)
+    if (a+2*(b+c)+d) == 0:
+        return 0.0
+    else:
+        return (a+d)/(a+2*(b+c)+d)
+
+def sim_4(i,p):
+    (a,b,c,d) = confusion_matrix(i,p)
+    if (a+b+c+d) == 0:
+        return 0.0
+    else:
+        return (a)/(a+b+c+d)
+
+def sim_5(i,p): #most popular
+    (a,b,c,d) = confusion_matrix(i,p)
+    if (a+b+c) == 0:
+        return 0.0
+    else :
+        return (a)/(a+b+c)
+
+def sim_6(i,p):
+    (a,b,c,d) = confusion_matrix(i,p)
+    if (2*a+b+c) == 0:
+        return 0.0
+    else:
+        return (2*a)/(2*a+b+c)
+
+def sim_7(i,p):
+    (a,b,c,d) = confusion_matrix(i,p)
+    if (a+2*(b+c)) == 0:
+        return 0.0
+    else :
+        return (a)/(a+2*(b+c))
+
+def sim_8(i,p):
+    (a,b,c,d) = confusion_matrix(i,p)
+    if (b+c) == 0:
+        return 0.0
+    else:
+        return (a)/(b+c)
+
+#similitude slide 155
+def sim_cosine(i,p):
     return np.dot(i.T,p)/(len(i)*len(p))
 
 
@@ -122,8 +192,9 @@ def cross_validation(DB, k, n_cross=10):
         R = build_R_from_DB(split[:v] + split[v+1:])
         R_test = build_R_from_DB([split[v]])
         print(v)
-        #R_hat = kNN(R, k)
-        R_hat = dummy(R)
+        R_hat = kNN(R, k)
+        print("okkk")
+        #R_hat = dummy(R)
         nrow, ncol = R_test.shape
         MSE = 0.0
         MAE = 0.0
@@ -175,7 +246,7 @@ def open_file(filepath):
 
 if __name__ == "__main__":
     R, DB = open_file("ml-100k/u.data")
-    #R_hat = dummy(result)
+    #R_hat = kNN(result,3)
     #num_rows, num_cols = R_hat.shape
     #print(result)
     #print(R_hat)
@@ -183,3 +254,9 @@ if __name__ == "__main__":
     #print(split_ratings(R))
     print(cross_validation(DB, 3))
     # print(split_ratings(100, cross=40))
+    #print(len(result))
+
+# (3.7827014565738692, 1.5766381749075415)  cosine + V binary
+# (3.9054899999999995, 1.57295)             cosine + V binary + round pred
+# (3.7516693338785023, 1.5449510928303942)  cosine + V rating
+# (3.8575299999999997, 1.5387899999999999)  cosine + V rating+ round pred
