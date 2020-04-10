@@ -292,11 +292,15 @@ if __name__ == "__main__":
     #print(R_hat)
     #print(R_hat[:,num_cols-1])
     #print(split_ratings(R))
-    print(cross_validation(DB, 3))
+    print(cross_validation(DB, 8))
     #print(split_ratings(100, cross=40))
     #print(len(result))
 
-# (3.7827014565738692, 1.5766381749075415)  cosine + V binary
-# (3.9054899999999995, 1.57295)             cosine + V binary + round pred
-# (3.7516693338785023, 1.5449510928303942)  cosine + V rating
-# (3.8575299999999997, 1.5387899999999999)  cosine + V rating+ round pred
+# (5.38067, 1.78837)                        k=1     cosine + V binary
+# (3.7827014565738692, 1.5766381749075415)  k=3     cosine + V binary
+# (3.5646839903019787, 1.5557354774322034)  k=6     cosine + V binary
+# (3.567794058857217, 1.5642715439959054)   k=8     cosine + V binary
+# (3.6052611051149492, 1.5779623255306814)  k=10    cosine + V binary
+# (3.9054899999999995, 1.57295)             k=3     cosine + V binary + round pred
+# (3.7516693338785023, 1.5449510928303942)  k=3     cosine + V rating
+# (3.8575299999999997, 1.5387899999999999)  k=3     cosine + V rating+ round pred
