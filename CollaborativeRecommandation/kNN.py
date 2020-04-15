@@ -294,13 +294,13 @@ def open_file(filepath):
 
 if __name__ == "__main__":
     R, DB = open_file("ml-100k/u.data")
-    # R_hat = kNN(result,3)
+    R_hat = kNN(DB, 10)
     # num_rows, num_cols = R_hat.shape
     # print(result)
-    # print(R_hat)
+    print(R_hat)
     # print(R_hat[:,num_cols-1])
     # print(split_ratings(R))
-    print(cross_validation(DB, 3))
+    # print(cross_validation(DB, 3))
     # print(split_ratings(100, cross=40))
     # print(len(result))
 
