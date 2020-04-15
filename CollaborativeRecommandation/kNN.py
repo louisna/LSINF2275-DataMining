@@ -13,49 +13,49 @@ result = np.array([[1, 0, 3],
                    [2, 0, 5]])
 
 
-def kNN(R,k): # R = numpy matix
+def kNN(R, k):  # R = numpy matix
     # calculing user's vector V[i] = vi in the slides
     sim_dico = {}
-    V = [] # list de user
+    V = []  # list de user
     print('debut')
     num_rows, num_cols = R.shape
     for i in range(num_rows):
         v = np.array([0.0]*num_cols)
         for j in range(num_cols):
-            if R[i,j] > 0:
-                #v[j] = R[i,j] # slight better result with sim_cosine
+            if R[i, j] > 0:
+                # v[j] = R[i,j] # slight better result with sim_cosine
                 v[j] = 1
-            else :
+            else:
                 v[j] = 0
         V.append(v)
-    #print(V)
+    # print(V)
 
     # computing the k nearest neighbours
-    nearest_neighbours = [] # nearest_neighbours[i] == k nearest neighbours of user i
+    nearest_neighbours = []  # nearest_neighbours[i] == k nearest neighbours of user i
     for i in range(num_rows):
-        kbestPQ = PriorityQueue() # (similitude, number of client)
+        kbestPQ = PriorityQueue()  # (similitude, number of client)
         for ii in range(num_rows):
-            if i != ii :
-                sim = sim_dico.get((i,ii),-1)
-                if (sim == -1):
-                    sim = sim_dico.get((ii,i),-1)
-                    if (sim == -1):
-                        sim = sim_cosine(V[i],V[ii])
-                    sim_dico[(i,ii)]  = sim
-                #print(sim)
-                #print(np.dot(V[i],V[ii].T))
-                #print(sim)
-                if kbestPQ.qsize() < k :
+            if i != ii:
+                sim = sim_dico.get((i, ii), -1)
+                if sim == -1:
+                    sim = sim_dico.get((ii, i), -1)
+                    if sim == -1:
+                        sim = sim_cosine(V[i], V[ii])
+                    sim_dico[(i, ii)] = sim
+                # print(sim)
+                # print(np.dot(V[i],V[ii].T))
+                # print(sim)
+                if kbestPQ.qsize() < k:
                     kbestPQ.put((sim, ii))
                     continue
                 # len(kbest) == k
-                e = kbestPQ.get() # O(1) instead O(nlogn)
-                if sim > e[0] :
-                    kbestPQ.put((sim, ii)) # O(logn) instead O(1)
-                else :
-                    kbestPQ.put(e) # O(logn) instead O(1)
+                e = kbestPQ.get()  # O(1) instead O(nlogn)
+                if sim > e[0]:
+                    kbestPQ.put((sim, ii))  # O(logn) instead O(1)
+                else:
+                    kbestPQ.put(e)  # O(logn) instead O(1)
         kbest = []
-        while(not kbestPQ.empty()):
+        while not kbestPQ.empty():
             kbest.append(kbestPQ.get())
         nearest_neighbours.append(kbest)
 
@@ -65,92 +65,103 @@ def kNN(R,k): # R = numpy matix
         for j in range(num_cols):
             denom = 0
             pred = 0
-            for e in nearest_neighbours[i]: # here PQ is inefficient because must creat a new PQ
+            for e in nearest_neighbours[i]:  # here PQ is inefficient because must creat a new PQ
                 denom += abs(e[0])
-                pred += e[0] * R[e[1],j]
+                pred += e[0] * R[e[1], j]
             if denom == 0:
                 pred = 0
             else:
                 pred /= denom
-            R_hat[i,j] = pred
+            R_hat[i, j] = pred
     
     print('fin')
 
     return R_hat
 
+
 def dummy(R):
     num_rows, num_cols = R.shape
     R_hat = np.ones((num_rows, num_cols))
     for i in range(num_cols):
-        R_hat[:,i] = np.mean(R[:,i]) * R_hat[:,i]
+        R_hat[:, i] = np.mean(R[:, i]) * R_hat[:, i]
     return R_hat
 
-def confusion_matrix(vi,vj):
+
+def confusion_matrix(vi, vj):
     conf = np.zeros((2, 2))
     for i in range(len(vi)):
-        conf[int(vi[i]),int(vj[i])] +=  1
-    return (conf[0,0], conf[0,1], conf[1,0], conf[1,1]) # slide 153 (a b c d)
+        conf[int(vi[i]), int(vj[i])] += 1
+    return conf[0, 0], conf[0, 1], conf[1, 0], conf[1, 1]  # slide 153 (a b c d)
 
-#similitude slide 154
-def sim_1(i,p):
-    (a,b,c,d) = confusion_matrix(i,p)
-    if (a+b+c+d)== 0:
+
+# similitude slide 154
+def sim_1(i, p):
+    (a, b, c, d) = confusion_matrix(i, p)
+    if (a+b+c+d) == 0:
         return 0.0
     else:
         return (a+d)/(a+b+c+d)
 
-def sim_2(i,p):
-    (a,b,c,d) = confusion_matrix(i,p)
+
+def sim_2(i, p):
+    (a, b, c, d) = confusion_matrix(i, p)
     if (2*(a+d)+b+c) == 0:
         return 0.0
     else:
         return 2*(a+d)/(2*(a+d)+b+c)
 
-def sim_3(i,p):
-    (a,b,c,d) = confusion_matrix(i,p)
+
+def sim_3(i, p):
+    (a, b, c, d) = confusion_matrix(i, p)
     if (a+2*(b+c)+d) == 0:
         return 0.0
     else:
         return (a+d)/(a+2*(b+c)+d)
 
-def sim_4(i,p):
-    (a,b,c,d) = confusion_matrix(i,p)
+
+def sim_4(i, p):
+    (a, b, c, d) = confusion_matrix(i, p)
     if (a+b+c+d) == 0:
         return 0.0
     else:
-        return (a)/(a+b+c+d)
+        return a/(a+b+c+d)
 
-def sim_5(i,p): #most popular
-    (a,b,c,d) = confusion_matrix(i,p)
+
+def sim_5(i, p):  # most popular
+    (a, b, c, d) = confusion_matrix(i, p)
     if (a+b+c) == 0:
         return 0.0
-    else :
-        return (a)/(a+b+c)
+    else:
+        return a/(a+b+c)
 
-def sim_6(i,p):
-    (a,b,c,d) = confusion_matrix(i,p)
+
+def sim_6(i, p):
+    (a, b, c, d) = confusion_matrix(i, p)
     if (2*a+b+c) == 0:
         return 0.0
     else:
         return (2*a)/(2*a+b+c)
 
-def sim_7(i,p):
-    (a,b,c,d) = confusion_matrix(i,p)
+
+def sim_7(i, p):
+    (a, b, c, d) = confusion_matrix(i, p)
     if (a+2*(b+c)) == 0:
         return 0.0
-    else :
-        return (a)/(a+2*(b+c))
+    else:
+        return a/(a+2*(b+c))
 
-def sim_8(i,p):
-    (a,b,c,d) = confusion_matrix(i,p)
+
+def sim_8(i, p):
+    (a, b, c, d) = confusion_matrix(i, p)
     if (b+c) == 0:
         return 0.0
     else:
-        return (a)/(b+c)
+        return a/(b+c)
 
-#similitude slide 155
-def sim_cosine(i,p):
-    return np.dot(i.T,p)/(len(i)*len(p))
+
+# similitude slide 155
+def sim_cosine(i, p):
+    return np.dot(i.T, p)/(len(i)*len(p))
 
 
 def split_ratings(DB, cross=10):
@@ -169,7 +180,7 @@ def split_ratings(DB, cross=10):
     split.append(list(total))
     split_DB = []
     for spl in split:
-        a = [DB[i,:] for i in spl]
+        a = [DB[i, :] for i in spl]
         split_DB.append(a)
     return split_DB
 
@@ -182,13 +193,13 @@ def load_indexes(DB, cross=10, filepath="ml-100k/u.data"):
             n = []
             for line in fd:
                 if line == '\n':
-                    if n != []:
+                    if n:
                         split.append(n)
                     n = []
                     continue
                 a = line.split('\t')
                 n.append(np.array([float(a[0]), float(a[1]), float(a[2])]))
-            if n != []:
+            if n:
                 split.append(n)
             return split
     except IOError:
@@ -203,7 +214,6 @@ def load_indexes(DB, cross=10, filepath="ml-100k/u.data"):
     print("rip")
     return split_DB
             
-
 
 def build_R_from_DB(splits):
     nb_ratings = 100000
@@ -234,15 +244,15 @@ def cross_validation(DB, k, n_cross=10):
         print(v)
         R_hat = kNN(R, k)
         print("okkk")
-        #R_hat = dummy(R)
+        # R_hat = dummy(R)
         nrow, ncol = R_test.shape
         MSE = 0.0
         MAE = 0.0
         for i in range(nrow):
             for j in range(ncol):
-                if R_test[i,j] != 0 :
-                    MSE += (R_test[i,j] - R_hat[i,j]) ** 2
-                    MAE += abs(R_test[i,j] - R_hat[i,j])
+                if R_test[i, j] != 0:
+                    MSE += (R_test[i, j] - R_hat[i, j]) ** 2
+                    MAE += abs(R_test[i, j] - R_hat[i, j])
         MSE /= len(split[v])
         MAE /= len(split[v])
         MSE_g[v] = MSE
@@ -252,8 +262,6 @@ def cross_validation(DB, k, n_cross=10):
     MAE = np.mean(MAE_g)
 
     return MSE, MAE
-
-
 
 
 def open_file(filepath):
@@ -286,15 +294,15 @@ def open_file(filepath):
 
 if __name__ == "__main__":
     R, DB = open_file("ml-100k/u.data")
-    #R_hat = kNN(result,3)
-    #num_rows, num_cols = R_hat.shape
-    #print(result)
-    #print(R_hat)
-    #print(R_hat[:,num_cols-1])
-    #print(split_ratings(R))
+    # R_hat = kNN(result,3)
+    # num_rows, num_cols = R_hat.shape
+    # print(result)
+    # print(R_hat)
+    # print(R_hat[:,num_cols-1])
+    # print(split_ratings(R))
     print(cross_validation(DB, 3))
-    #print(split_ratings(100, cross=40))
-    #print(len(result))
+    # print(split_ratings(100, cross=40))
+    # print(len(result))
 
 # (3.7827014565738692, 1.5766381749075415)  cosine + V binary
 # (3.9054899999999995, 1.57295)             cosine + V binary + round pred
