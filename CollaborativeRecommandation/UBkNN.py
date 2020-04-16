@@ -23,7 +23,7 @@ def uBkNN(r, k):
     means = [0.0 if math.isnan(i) else i for i in means]
 
     # Compute sim matrix
-    sim_matrix = np.zeros((n_row, n_col))
+    sim_matrix = np.zeros((n_row, n_row))
     for i in range(n_row):
         for j in range(i+1, n_row):
             a = np.dot(r[i, :], r[j, :])
