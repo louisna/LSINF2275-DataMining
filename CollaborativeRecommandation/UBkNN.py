@@ -3,6 +3,7 @@ import sys
 import random
 import math
 from queue import PriorityQueue
+import time
 import heapq
 random.seed(1998)
 
@@ -21,14 +22,6 @@ def uBkNN(r, k):
 
     means = [0.0 if math.isnan(i) else i for i in means]
 
-    # means = np.zeros((n_row, 1))
-    #for i in range(n_row):
-    #    s = 0
-    #    for j in range(n_col):
-    #        s += r[i, j]
-    #    if s != 0:
-    #        means[i] = s/n_col
-
     # Compute sim matrix
     sim_matrix = np.zeros((n_row, n_col))
     for i in range(n_row):
@@ -39,34 +32,39 @@ def uBkNN(r, k):
                 sim_matrix[i, j] = a
                 sim_matrix[j, i] = a
 
+    threshold = np.sqrt(n_row)
+
     r_hat = r.copy()
 
     for i in range(n_row):
         print(i)
+        a = [(sim_matrix[i, j], j) for j in range(n_row)]
+        a.sort(key=lambda iii: -iii[0])
         for j in range(n_col):
             if r[i, j] != 0:  # Not compute if already exist
                 continue
             if len(vertical[j][0]) == 0:  # In case no one purchased this item
                 continue  # Useless to try to compute it
 
-            """
-            kNN = PriorityQueue()  # (sim, id of user)
-            for client in vertical[j]:
-                sim = np.dot(R[i, :], R[client, :])
-                if kNN.qsize() >= k:  # Full kNN
-                    first_k = kNN.get()
-                    if sim > first_k[0]:  # Update
-                        kNN.put((sim, client))
-                    else:  # Like before
-                        kNN.put(first_k)
-            """
-            kNN = []
-            # print("process")
-            for client in vertical[j][0]:
-                sim = sim_matrix[i, client]
-                if len(kNN) >= k and kNN[0][0] < sim:  # Full kNN and update
-                    heapq.heappop(kNN)
-                heapq.heappush(kNN, (sim, client))
+            if len(vertical[j][0]) <= k:  # Every elements of vertical will be used
+                kNN = [(sim_matrix[i, zz], zz) for zz in vertical[j][0]]  # if sim_matrix[i, zz] > 0.0 ?
+            elif len(vertical[j][0]) < threshold:  # If not much elements: can do like before
+                kNN = []
+                # print("process")
+                for client in vertical[j][0]:
+                    sim = sim_matrix[i, client]
+                    if len(kNN) < k:
+                        heapq.heappush(kNN, (sim, client))
+                    elif len(kNN) >= k and kNN[0][0] < sim:  # Full kNN and update
+                        heapq.heappop(kNN)
+                        heapq.heappush(kNN, (sim, client))
+            else:
+                kNN = []
+                for (sim, other) in a:
+                    if r[other, j] > 0.0:
+                        kNN.append((sim, other))
+                    if len(kNN) == k:
+                        break
 
             # We have here the kNN of user i (if at least k)
             pred = 0.0
@@ -163,7 +161,9 @@ def cross_validation(DB, k, n_cross=10):
         R = build_R_from_DB(split[:v] + split[v + 1:])
         R_test = build_R_from_DB([split[v]])
         # print(v)
+        a = time.time()
         R_hat = uBkNN(R, k)
+        print(time.time() - a)
         # print('\n\n')
         # R_hat = dummy(R)
         nrow, ncol = R_test.shape
