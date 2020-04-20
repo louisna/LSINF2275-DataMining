@@ -1,11 +1,100 @@
 import numpy as np
-import sys
 import random
 import math
-from queue import PriorityQueue
 import time
 import heapq
+from Tools import *
+
+from threading import Thread
+import threading
+from queue import Queue
+
 random.seed(1998)
+
+buffer_PC1 = Queue(10)  # Buffer for the first Producer-Consumer: R and R_test
+buffer_PC2 = Queue(10)  # Buffer for the second Producer-Consumer: R_hat and R_test
+# R_test is just forwarded, but simpler like that
+
+NUMBER_OF_THREADS = 4
+final_res = []
+
+
+def producer(db, n_cross):
+    global buffer_PC1
+
+    split = load_indexes(db, n_cross)
+
+    # Put values: (R, R_test)
+    for v in range(n_cross):
+        R = build_R_from_DB(split[:v] + split[v + 1:])
+        R_test = build_R_from_DB([split[v]])
+        buffer_PC1.put((R, R_test))
+
+    # Final values to indicate the end of the
+    for t in range(NUMBER_OF_THREADS):
+        print("coucou")
+        buffer_PC1.put(None)
+
+    return
+
+
+def compute(k):
+    global buffer_PC1
+    global buffer_PC2
+
+    while True:
+        value = buffer_PC1.get()
+        print("salut")
+        if value is None:  # The end of the thread
+            print("ok")
+            buffer_PC2.put(None)  # Indicate its end
+            return
+
+        r, r_test = value  # Decompose the value into r and r_test
+        print("je commence", threading.current_thread())
+        r_hat = uBkNN(r, k)  # Compute r_hat from the function defined below
+        print("fini")
+        buffer_PC2.put((r_hat, r_test))  # Put values: (r_hat, r_test)
+
+
+def consumer(n_cross):
+    global buffer_PC2
+
+    counter_end = 0  # Counts the number of threads that are finished
+
+    processed = 0
+
+    MSE_g = np.zeros(n_cross)
+    MAE_g = np.zeros(n_cross)
+
+    while True:
+        value = buffer_PC2.get()
+        if value is None:
+            counter_end += 1  # One more thread is finished
+            if counter_end == NUMBER_OF_THREADS:  # All threads are done
+                final_res.append((np.mean(MSE_g), np.mean(MAE_g)))  # Compute mean
+                return
+            continue  # Restart the loop
+
+        r_hat, r_test = value  # Decomposes values
+        print("get one element", processed)
+        nrow, ncol = r_test.shape
+        MSE = 0.0
+        MAE = 0.0
+        length = 0
+        for i in range(nrow):
+            for j in range(ncol):
+                if r_test[i, j] != 0:
+                    # print(R_test[i, j], R_hat[i, j])
+                    MSE += (r_test[i, j] - r_hat[i, j]) ** 2
+                    MAE += abs(r_test[i, j] - r_hat[i, j])
+                    length += 1
+        MSE /= length
+        MAE /= length
+        print(MSE, MAE)
+        MSE_g[processed] = MSE
+        MAE_g[processed] = MAE
+        processed += 1
 
 
 def uBkNN(r, k):
@@ -37,7 +126,6 @@ def uBkNN(r, k):
     r_hat = r.copy()
 
     for i in range(n_row):
-        print(i)
         a = [(sim_matrix[i, j], j) for j in range(n_row)]
         a.sort(key=lambda iii: -iii[0])
         for j in range(n_col):
@@ -79,72 +167,6 @@ def uBkNN(r, k):
     return r_hat
 
 
-def split_ratings(DB, cross=10):
-    split = []
-    nrow, _ = DB.shape
-
-    total = list(range(nrow))
-
-    for i in range(cross - 1):
-        print(i)
-        length = round(len(total) / (cross - i))
-        index_sample = random.sample(range(len(total)), length)
-        split.append([total[j] for j in index_sample])
-        total = [total[j] for j in range(len(total)) if j not in index_sample]
-    split.append(list(total))
-    split_DB = []
-    for spl in split:
-        a = [DB[i, :] for i in spl]
-        split_DB.append(a)
-    return split_DB
-
-
-def load_indexes(DB, cross=10, filepath="ml-100k/u.data"):
-    filepath = filepath[:-5] + "_indexes.data"
-    try:
-        with open(filepath, "r") as fd:
-            split = []
-            n = []
-            for line in fd:
-                if line == '\n':
-                    if n:
-                        split.append(n)
-                    n = []
-                    continue
-                a = line.split('\t')
-                n.append(np.array([float(a[0]), float(a[1]), float(a[2])]))
-            if n:
-                split.append(n)
-            return split
-    except IOError:
-        print("No such file", filepath)
-    split_DB = split_ratings(DB, cross)
-    with open(filepath, "w+") as fd:
-        for s in split_DB:
-            for i in s:
-                fd.write("" + str(i[0]) + "\t" + str(i[1]) + "\t" + str(i[2]) + "\t" + str(1234567890) + "\n")
-            fd.write('\n')
-            print('ok')
-    print("rip")
-    return split_DB
-
-
-def build_R_from_DB(splits):
-    # nb_ratings = 100000
-    nb_ratings = 20000
-    nb_users = 943
-    nb_items = 1682
-
-    # Create the rating matrix
-    R = np.zeros((nb_users, nb_items))
-
-    for split in splits:
-        for user, item, rating in split:
-            R[int(user) - 1, int(item) - 1] = int(rating)
-
-    return R
-
-
 def cross_validation(DB, k, n_cross=10):
     MSE_g = np.zeros(10)
     MAE_g = np.zeros(10)
@@ -182,34 +204,26 @@ def cross_validation(DB, k, n_cross=10):
     return MSE, MAE
 
 
-def open_file(filepath):
-    """
-    The pattern in the file is the following:
-    user id | item id | rating | timestamp
-    """
-    nb_ratings = 100000
-    # nb_ratings = 20000
-    nb_users = 943
-    nb_items = 1682
-
-    DB = np.zeros((nb_ratings, 3))
-
-    # Create the rating matrix
-    R = np.zeros((nb_users, nb_items))
-
-    with open(filepath, "r") as fd:
-        count = 0
-        for line in fd:
-            if not line or line == "\n":
-                continue
-            user_id, item_id, rating, timestamp = list(line.split('\t'))
-            R[int(user_id) - 1, int(item_id) - 1] = int(rating)
-            DB[count] = np.array([int(user_id), int(item_id), int(rating)])
-            count += 1
-
-    return R, DB
-
-
 if __name__ == "__main__":
-    R, DB = open_file("ml-100k/u.data")
-    cross_validation(DB, 15)
+    R, db = open_file("ml-100k/u.data")
+    k = 15
+    n_cross = 10
+
+    a = time.time()
+
+    producer_thread = Thread(target=producer, args=(db, n_cross))
+    compute_threads = [Thread(target=compute, args=(k,)) for i in range(NUMBER_OF_THREADS)]
+    consumer_thread = Thread(target=consumer, args=(n_cross,))
+
+    producer_thread.start()
+    for i in range(NUMBER_OF_THREADS):
+        compute_threads[i].start()
+    consumer_thread.start()
+
+    producer_thread.join()
+    for i in range(NUMBER_OF_THREADS):
+        compute_threads[i].join()
+    consumer_thread.join()
+
+    print(final_res)
+    print(time.time() - a)
