@@ -3,11 +3,13 @@ import random
 import math
 import time
 import heapq
+
+from multiprocessing import Process, Queue
+
 from Tools import *
 
 from threading import Thread
 import threading
-from queue import Queue
 
 random.seed(1998)
 
@@ -15,7 +17,7 @@ buffer_PC1 = Queue(10)  # Buffer for the first Producer-Consumer: R and R_test
 buffer_PC2 = Queue(10)  # Buffer for the second Producer-Consumer: R_hat and R_test
 # R_test is just forwarded, but simpler like that
 
-NUMBER_OF_THREADS = 4
+NUMBER_OF_THREADS = 2
 final_res = []
 
 
@@ -44,16 +46,13 @@ def compute(k):
 
     while True:
         value = buffer_PC1.get()
-        print("salut")
         if value is None:  # The end of the thread
             print("ok")
             buffer_PC2.put(None)  # Indicate its end
             return
 
         r, r_test = value  # Decompose the value into r and r_test
-        print("je commence", threading.current_thread())
         r_hat = uBkNN(r, k)  # Compute r_hat from the function defined below
-        print("fini")
         buffer_PC2.put((r_hat, r_test))  # Put values: (r_hat, r_test)
 
 
@@ -98,6 +97,8 @@ def consumer(n_cross):
 
 
 def uBkNN(r, k):
+
+    # print('je rentre')
     n_row, n_col = r.shape
     # Compute vertical representation of R
 
@@ -205,15 +206,15 @@ def cross_validation(DB, k, n_cross=10):
 
 
 if __name__ == "__main__":
-    R, db = open_file("ml-100k/u.data")
+    R, db = open_file("../ml-100k/u.data")
     k = 15
     n_cross = 10
 
     a = time.time()
 
-    producer_thread = Thread(target=producer, args=(db, n_cross))
-    compute_threads = [Thread(target=compute, args=(k,)) for i in range(NUMBER_OF_THREADS)]
-    consumer_thread = Thread(target=consumer, args=(n_cross,))
+    producer_thread = Process(target=producer, args=(db, n_cross))
+    compute_threads = [Process(target=compute, args=(k,)) for i in range(NUMBER_OF_THREADS)]
+    consumer_thread = Process(target=consumer, args=(n_cross,))
 
     producer_thread.start()
     for i in range(NUMBER_OF_THREADS):

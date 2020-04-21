@@ -94,3 +94,52 @@ def split_ratings(DB, cross=10):
         a = [DB[i, :] for i in spl]
         split_DB.append(a)
     return split_DB
+
+
+def save_result(filepath, k, res, intermediate=None, sd=True):
+    """
+    Saves the result of 'res' in a file for later use
+    :param sd: Standard deviation method
+    :param filepath: the path of the file containing the data used for the experiment
+    :param k: number of neighbors
+    :param res: tuple containing the values (MSE, MAE) of the experiment
+    :param intermediate: The intermediate values
+    :return: /
+    """
+    filepath = filepath[:-5] + "_" + str(k)
+    if sd:
+        filepath += "_sd"
+    filepath += "_res.data"
+    with open(filepath, "w+") as fd:
+        fd.write("(MSE, MAE) for k={} and {} cross-validation\n".format(k, len(res)))
+        fd.write("{}\t{}\n".format(res[0], res[1]))
+
+        if intermediate is not None:
+            count = 0
+            for MSE, MAE in intermediate:
+                fd.write("{}\t{}\t{}\n".format(count, MSE, MAE))
+                count += 1
+    return
+
+
+def get_result(filepath, k, sd=False):
+    """
+    Returns the (MSE, MAE) result of the dataset used for the dataset of filepath
+    :param filepath: the path of the file containing the data used for the experiment
+    :param k: number of neighbors
+    :param sd: Standard deviation method
+    :return: Tuple (MSE, MAE)
+    """
+    filepath = filepath[:-5] + "_" + str(k)
+    if sd:
+        filepath += "_sd"
+    filepath += "_res.data"
+    try:
+        with open(filepath) as fd:
+            next(fd)
+            for line in fd:
+                l_splited = line.split("\t")
+                return int(l_splited[0]), int(l_splited[1])
+
+    except IOError:
+        print("No such file or more error")
