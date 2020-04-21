@@ -122,7 +122,7 @@ def save_result(filepath, k, res, intermediate=None, sd=True):
     return
 
 
-def get_result(filepath, k, sd=False):
+def get_result(filepath, k, sd=True):
     """
     Returns the (MSE, MAE) result of the dataset used for the dataset of filepath
     :param filepath: the path of the file containing the data used for the experiment
@@ -139,7 +139,7 @@ def get_result(filepath, k, sd=False):
             next(fd)
             for line in fd:
                 l_splited = line.split("\t")
-                return int(l_splited[0]), int(l_splited[1])
+                return float(l_splited[0]), float(l_splited[1])
 
     except IOError:
         print("No such file or more error")
