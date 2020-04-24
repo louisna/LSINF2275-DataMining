@@ -8,7 +8,7 @@ import heapq
 random.seed(1998)
 
 
-def uBkNN(r, k):
+def uBkNN(r, k=15):
     n_row, n_col = r.shape
     # Compute vertical representation of R
 

@@ -30,6 +30,23 @@ def open_file(filepath):
     return R, DB
 
 
+def R_from_filename(filename):
+    nb_users = 943
+    nb_items = 1682
+
+    R = np.zeros((nb_users, nb_items))
+
+    num_lines = sum(1 for line in open(filename))
+
+    with open(filename) as fd:
+        for line in fd:
+            if not line or line == "\n":
+                continue
+            user_id, item_id, rating, timestamp = list(line.split('\t'))
+            R[int(user_id) - 1, int(item_id) - 1] = int(rating)
+    return R
+
+
 def build_R_from_DB(splits):
     nb_ratings = 100000
     # nb_ratings = 20000
