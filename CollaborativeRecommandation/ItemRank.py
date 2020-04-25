@@ -18,9 +18,9 @@ def compute_correlation_matrix_user_preferences(R):
     C = C_tilde / omega2
 
     # TODO: Improve computation of D
-    den = np.array([np.sum(R[i, :]) for i in range(n_row)])
-    den = np.array([1. if i == 0 else i for i in den])
-    D = np.array([R[i, :] / den[i] for i in range(n_row)])
+    # den = np.array([np.sum(R[i, :]) for i in range(n_row)])
+    # den = np.array([1. if i == 0 else i for i in den])
+    D = np.array([R[i, :] / len(np.nonzero(R[i, :])[0]) for i in range(n_row)])  # TODO: should divide by n_col ?
     return C, D.T
 
 
@@ -29,7 +29,10 @@ def itemRank(R, alpha=0.85, doa=False):
     print("compute C and D")
     C, D = compute_correlation_matrix_user_preferences(R)
     print("C and D done")
-    print(C)
+    # for i in range(n_row):
+    #     print("For user {} we get".format(i))
+    #     for j in D[:, i]:
+    #         print(j)
     R_hat = R.copy()
 
     IR_global = np.zeros((n_row, n_col))
@@ -40,7 +43,8 @@ def itemRank(R, alpha=0.85, doa=False):
         IR = alpha * np.dot(C, IR_before) + (1 - alpha) * D[:, i]
         # Repeat until convergence
         count = 1
-        while np.linalg.norm(IR - IR_before) > epsilon:
+        # while np.sum((IR-IR_before)**2) > epsilon:
+        while not (abs(IR - IR_before) < epsilon).all():
             IR_before = IR
             IR = alpha * np.dot(C, IR_before) + (1 - alpha) * D[:, i]
             count += 1
@@ -63,7 +67,7 @@ def cross_validation(DB, n_cross=10):
     split = load_indexes(DB, n_cross)
 
     for v in range(n_cross):
-        # v is the testo set, splitted[-v] is the training set
+        # v is the test set, splitted[-v] is the training set
         R = build_R_from_DB(split[:v] + split[v + 1:])
         R_test = build_R_from_DB([split[v]])
         # print(v)
@@ -124,6 +128,7 @@ def compute_DAO(R, R_train, R_test):
         return 0.
 
     DOA = np.array([0.0] * n_row)
+    count = 0
     for i in range(n_row):
         Tui = np.nonzero(R_test[i, :])[0]
         NWui = NW[i, :][0]
@@ -134,11 +139,13 @@ def compute_DAO(R, R_train, R_test):
         den = (len(Tui) * len(NWui))
         if den != 0.0:
             DOAui = DOAui / den
+            count += 1
         else:
             DOAui = 0.0
+        print("For user {} the DOA is".format(i), DOAui)
         DOA[i] = DOAui
 
-    macro_DOA = np.sum(DOA) / n_row
+    macro_DOA = np.sum(DOA) / count  # TODO: divide by count or n_row ?
     print(macro_DOA)
 
 
