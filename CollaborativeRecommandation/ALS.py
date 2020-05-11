@@ -9,7 +9,7 @@ random.seed(1998)
 def als(r, k=20):
     ### https://medium.com/radon-dev/als-implicit-collaborative-filtering-5ed653ba39fe
     lam = 1e-3
-    nb_iteration = 100
+    nb_iteration = 300
 
     # data(R) must be csr_matrix format n by m
     r_hat = r.copy()
