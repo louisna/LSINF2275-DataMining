@@ -1,5 +1,6 @@
 from UBkNN import uBkNN
 from UBkNN_sd import uBkNN_sd
+from ALS import als
 
 import numpy as np
 import pandas as pd
@@ -34,7 +35,7 @@ def cross_validation(DB, k, n_folds=10, cf=uBkNN):
         R_test = build_R_from_DB(DB, test_index)
         # print(v)
         a = time.time()
-        R_hat = cf(R, k)
+        R_hat = cf(R)
         print(time.time() - a)
         nrow, ncol = R_test.shape
         MSE = 0.0
@@ -67,5 +68,5 @@ def open_file(filename):
 
 
 if __name__ == '__main__':
-    DB = open_file('ml-100k/u.data')
-    cross_validation(DB, 10, cf=uBkNN_sd)
+    DB = open_file('ml-100k/u1.test')
+    cross_validation(DB, 10, cf=als)
