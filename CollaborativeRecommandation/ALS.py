@@ -10,7 +10,7 @@ def als(r, k=30):
     ### https://medium.com/radon-dev/als-implicit-collaborative-filtering-5ed653ba39fe
     alpha = 40
     lam = 1e-3
-    nb_iteration = 50
+    nb_iteration = 10
 
     # data(R) must be csr_matrix format n by m
     r_hat = r.copy()
@@ -20,12 +20,6 @@ def als(r, k=30):
     # init
     X = csr_matrix(np.random.normal(size=(n_row, k)))
     Y = csr_matrix(np.random.normal(size=(n_col, k)))
-
-    X_I = eye(n_row)
-    Y_I = eye(n_col)
-
-    I = eye(k)
-    lI = lam * I
 
     # confidence level
     c = csr_matrix(r.copy() * alpha)
@@ -43,11 +37,8 @@ def als(r, k=30):
             p_u[p_u != 0] = 1.0
 
             CuI = diags(u_row, [0])
-            Cu = CuI + Y_I
 
-            yT_CuI_y = Y.T.dot(CuI).dot(Y)
-            yT_Cu_pu = Y.T.dot(Cu).dot(p_u.T)
-            X[u] = spsolve(yTy + yT_CuI_y + lI, yT_Cu_pu)
+            X[u] = spsolve(yTy + Y.T.dot(CuI).dot(Y) + lam * eye(k), Y.T.dot(CuI + eye(n_col)).dot(p_u.T))
 
         for i in range(n_col):  # for each item i
             i_row = c[:, i].T.toarray()
@@ -56,11 +47,8 @@ def als(r, k=30):
             p_i[p_i != 0] = 1.0
 
             CiI = diags(i_row, [0])
-            Ci = CiI + X_I
 
-            xT_CiI_x = X.T.dot(CiI).dot(X)
-            xT_Ci_pi = X.T.dot(Ci).dot(p_i.T)
-            Y[i] = spsolve(xTx + xT_CiI_x + lI, xT_Ci_pi)
+            Y[i] = spsolve(xTx + X.T.dot(CiI).dot(X) + lam * eye(k), X.T.dot(CiI + eye(n_row)).dot(p_i.T))
 
     r_approx = X.dot(Y.T)
 
