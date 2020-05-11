@@ -37,7 +37,6 @@ def uBkNN(r, k):
     r_hat = r.copy()
 
     for i in range(n_row):
-        print(i)
         a = [(sim_matrix[i, j], j) for j in range(n_row)]
         a.sort(key=lambda iii: -iii[0])
         for j in range(n_col):

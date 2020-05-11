@@ -1,60 +1,80 @@
 import matplotlib.pyplot as plt
+import matplotlib
 
-from UBkNN import *
-from random import randrange, randint
-import heapq
+import numpy as np
+import random as rnd
+import time
+from cross_validation import *
+from UBkNN import uBkNN
+from UBkNN_sd import uBkNN_sd
+from tqdm import tqdm
+import pandas as pd
 
-def similarity_score(R):
 
-    n_row, n_col = R.shape
+# To show standard deviation caps
+matplotlib.rcParams.update({'errorbar.capsize': 3})
 
-    # Compute sim matrix
-    sim_matrix = np.zeros((n_row, n_row))
-    for i in range(n_row):
-        for j in range(i + 1, n_row):
-            a = np.dot(R[i, :], R[j, :])
-            if a != 0.0:
-                b = a
-                a = a/(np.linalg.norm(R[i, :]) * np.linalg.norm(R[j, :]))
-                sim_matrix[i, j] = a
-                sim_matrix[j, i] = a
+def from_algo_to_string(cf):
+    if cf == uBkNN:
+        return 'ubknn'
+    elif cf == uBkNN_sd:
+        return 'ubknn_sd'
+    else:
+        return 'itemrank'
 
-    print("done 1")
 
-    a = randrange(n_row)
-    cmp1 = R[a, :]
+def analyze_by_k(DB, cf, min_k=1, max_k=30):
+    """
+    Analyzes the accuracy of the the algorithm cf
+    """
+    k = list(range(min_k, max_k+1))
 
-    kNN = []
+    filename = "analyze_k_{}_{}_{}.txt".format(min_k, max_k, from_algo_to_string(cf))
 
-    for i in range(n_row):
-        if i == a:
-            continue
-        score = sim_matrix[a, i]
-        if len(kNN) < 1:
-            heapq.heappush(kNN, (score, i))
-        elif score > kNN[0][0]:
-            heapq.heapreplace(kNN, (score, i))
+    with open(filename, "a+") as fd:
+        for i in tqdm(k):
+            MSE, MAE = cross_validation(DB, i, cf=cf, analyzing=True)
+            out = "" + str(i) + " "
+            for j in MSE:
+                out += str(j) + " "
+            for j in MAE:
+                out += str(j) + " "
+            out += "\n"
+            fd.write(out)
+            fd.flush()
 
-    print(kNN)
 
-    res1 = []
-    res2 = []
-    j = kNN[0][1]
-    for i in range(n_row):
-        if R[a, i] != 0 and R[j, i] != 0:
-            res1.append(R[a, i])
-            res2.append(R[j, i])
+def open_file_k(filename):
+    res = pd.read_csv(filename, sep=' ', encoding='latin-1')
+    res_np = res.values
+    k = res_np[:, 0]  # First column of the dataframe contains k
+    MSE = res_np[:, 1:11]  # Next 10 columns are values of the MSE
+    MAE = res_np[:, 11:]  # Last 10 columns are values of the MAE
+    return k, MSE, MAE
 
-    return res1, res2
 
-def aaaa(res1, res2):
+def plot_analyze_k(filename):
+    k, MSE, MAE = open_file_k(filename)
 
-    x = list(range(len(res1)))
-    plt.scatter(x, res1)
-    plt.scatter(x, res2)
+    MSE_mean = np.mean(MSE, axis=1)
+    MAE_mean = np.mean(MAE, axis=1)
+
+    MSE_sd = np.std(MSE, axis=1)
+    MAE_sd = np.std(MAE, axis=1)
+
+    print(MSE_sd)
+
+    plt.errorbar(k, MSE_mean, yerr=MSE_sd, fmt='-o', label='UBkNN with sd scaling')
+    plt.ylabel('MSE')
+    plt.xlabel('Number of neighbors')
+    plt.title('User-based kNN on ml-100k')
+    plt.legend(loc='best')
+
     plt.show()
 
-filename = 'ml-100k/u.data'
-R, D = open_file(filename)
-a, b = similarity_score(R)
-aaaa(a, b)
+
+if __name__ == '__main__':
+    DB = open_file('ml-100k/u.data')
+    analyze_by_k(DB, uBkNN_sd, 1, 50)
+    analyze_by_k(DB, uBkNN, 1, 50)
+    # plot_analyze_k('analyze_k_1_30_ubknn_sd.txt')

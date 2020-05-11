@@ -21,7 +21,7 @@ def build_R_from_DB(DB, indexes):
     return R
 
 
-def cross_validation(DB, k, n_folds=10, cf=uBkNN):
+def cross_validation(DB, k, n_folds=10, cf=uBkNN, analyzing=False):
     MSE_g = np.zeros(n_folds)
     MAE_g = np.zeros(n_folds)
 
@@ -35,7 +35,7 @@ def cross_validation(DB, k, n_folds=10, cf=uBkNN):
         # print(v)
         a = time.time()
         R_hat = cf(R, k)
-        print(time.time() - a)
+        # print(time.time() - a)
         nrow, ncol = R_test.shape
         MSE = 0.0
         MAE = 0.0
@@ -47,13 +47,16 @@ def cross_validation(DB, k, n_folds=10, cf=uBkNN):
                     MAE += abs(R_test[i, j] - R_hat[i, j])
         MSE /= len(test_index)
         MAE /= len(test_index)
-        print(MSE, MAE)
+        # print(MSE, MAE)
         MSE_g[index_fold] = MSE
         MAE_g[index_fold] = MAE
         index_fold += 1
 
     MSE = np.mean(MSE_g)
     MAE = np.mean(MAE_g)
+
+    if analyzing:
+        return MSE_g, MAE_g
 
     return MSE, MAE
 
