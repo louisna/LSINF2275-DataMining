@@ -6,11 +6,10 @@ import random
 random.seed(1998)
 
 
-def als(r, k=30):
+def als(r, k=20):
     ### https://medium.com/radon-dev/als-implicit-collaborative-filtering-5ed653ba39fe
-    alpha = 40
     lam = 1e-3
-    nb_iteration = 10
+    nb_iteration = 100
 
     # data(R) must be csr_matrix format n by m
     r_hat = r.copy()
@@ -21,9 +20,6 @@ def als(r, k=30):
     X = csr_matrix(np.random.normal(size=(n_row, k)))
     Y = csr_matrix(np.random.normal(size=(n_col, k)))
 
-    # confidence level
-    c = csr_matrix(r.copy() * alpha)
-
     # iterate
     for iteration in range(nb_iteration):
 
@@ -32,7 +28,8 @@ def als(r, k=30):
 
         print(iteration)
         for u in range(n_row):  # for each user u
-            u_row = c[u, :].toarray()
+            u_row = r[u, :].toarray()
+
             p_u = u_row.copy()
             p_u[p_u != 0] = 1.0
 
@@ -41,7 +38,7 @@ def als(r, k=30):
             X[u] = spsolve(yTy + Y.T.dot(CuI).dot(Y) + lam * eye(k), Y.T.dot(CuI + eye(n_col)).dot(p_u.T))
 
         for i in range(n_col):  # for each item i
-            i_row = c[:, i].T.toarray()
+            i_row = r[:, i].T.toarray()
 
             p_i = i_row.copy()
             p_i[p_i != 0] = 1.0
