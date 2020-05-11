@@ -1,5 +1,7 @@
 from UBkNN import uBkNN
 from UBkNN_sd import uBkNN_sd
+from als import cf_als
+from mf_sgd import sgd
 
 import numpy as np
 import pandas as pd
@@ -68,4 +70,4 @@ def open_file(filename):
 
 if __name__ == '__main__':
     DB = open_file('ml-100k/u.data')
-    cross_validation(DB, 10, cf=uBkNN_sd)
+    cross_validation(DB, 40, cf=sgd)
