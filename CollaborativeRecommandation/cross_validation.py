@@ -36,7 +36,7 @@ def cross_validation(DB, k, n_folds=10, cf=uBkNN):
         R_test = build_R_from_DB(DB, test_index)
         # print(v)
         a = time.time()
-        R_hat = cf(R, k)
+        R_hat = cf(R)
         print(time.time() - a)
         nrow, ncol = R_test.shape
         MSE = 0.0
