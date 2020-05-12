@@ -1,7 +1,7 @@
 from UBkNN import uBkNN
 from UBkNN_sd import uBkNN_sd
 from mf_sgd import sgd
-from weighted_slope_one import weighted_slope_one
+from weighted_slope_one import weighted_slope_one, weighted_slope_one_item_usefulness
 from basic_algorithms import normal_predictor, baseline
 
 from surprise import Dataset
@@ -113,5 +113,5 @@ def open_file(filename):
 
 if __name__ == '__main__':
     DB = open_file('ml-100k/u.data')
-    cross_validation(DB, 40, cf=baseline)
+    cross_validation(DB, 40, cf=weighted_slope_one_item_usefulness)
     # cross_validation_surprise()
