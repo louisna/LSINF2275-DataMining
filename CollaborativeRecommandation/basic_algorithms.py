@@ -26,9 +26,9 @@ def normal_predictor(R):
 
     sigma = np.sqrt(var / np.count_nonzero(R))
 
-    R_hat = R.copy()
-    R_hat = R_hat.astype(float)
+    R_hat = R.copy().astype(float)
 
+    # Predict for non-rated movies
     for u in tqdm(range(n_users)):
         for i in range(n_movies):
             if R[u, i] != 0:
@@ -53,6 +53,7 @@ def baseline(R):
 
     # Compute user bias
     # Compute mean for each user
+    # The bias is the difference between the global mean and the user mean
     means = np.true_divide(R.sum(1), (R != 0).sum(1))
     means = np.array([0.0 if math.isnan(i) else i for i in means])
     bias_users = means - mu
@@ -61,9 +62,10 @@ def baseline(R):
     # Compute mean for each movie
     means_m = np.true_divide(R.T.sum(1), (R.T != 0).sum(1))
     means_m = np.array([0.0 if math.isnan(i) else i for i in means_m])
+    # The bias is the difference between the global mean and the movie mean
     bias_movies = means_m - mu
 
-    # Predict
+    # Predict for non-rated movies
     for u in tqdm(range(n_users)):
         for i in range(n_movies):
             if R[u, i] != 0:

@@ -9,7 +9,14 @@ import heapq
 random.seed(1998)
 
 
-def uBkNN_sd(r, k=15):
+def uBkNN_sd(r, k=40):
+    """
+        Compute the rating predictions for missing values of r, using a user-based kNN model
+        It also takes into account the standard deviation of the users to predicted more accurately
+        :param r: the rating matrix
+        :param k: the number of neighbors
+        :return: the rating prediction matrix
+        """
     n_row, n_col = r.shape
     # Compute vertical representation of R
 
@@ -36,11 +43,20 @@ def uBkNN_sd(r, k=15):
                 sim_matrix[i, j] = a
                 sim_matrix[j, i] = a
 
+    # Threshold to speed-up the computation time
+    # if, for a movie j, there is less than 'threshold' users that rated this movie,
+    # perform a classic search among all users that have rated this movie
+    # otherwise: there are a lot of people that rated this movie
+    # it is then faster, for user i, to check his neighbors in decreasing order of similarity score
+    # and retrieve the user if it has rated this movie (we have a high chance of that, since the number of people
+    # that rated this movie is high)
     threshold = k * 3
 
-    r_hat = r.copy()
+    r_hat = r.copy().astype(float)
 
     for i in tqdm(range(n_row)):
+        # Sort the users according to similarity score
+        # Used later if high number of users that rated a movie
         a = [(sim_matrix[i, j], j) for j in range(n_row)]
         a.sort(key=lambda iii: iii[0], reverse=True)
         for j in range(n_col):
@@ -49,17 +65,18 @@ def uBkNN_sd(r, k=15):
             if len(vertical[j][0]) == 0:  # In case no one purchased this item
                 continue  # Useless to try to compute it
 
-            if len(vertical[j][0]) <= k:  # Every elements of vertical will be used
-                kNN = [(sim_matrix[i, zz], zz) for zz in vertical[j][0]]  # if sim_matrix[i, zz] > 0.0 ?
+            if len(vertical[j][0]) <= k:  # Every elements of vertical[j] will be used
+                kNN = [(sim_matrix[i, zz], zz) for zz in vertical[j][0]]
             elif len(vertical[j][0]) < threshold:  # If not much rating users: search in that set
                 kNN = []
+                # Simple heap search
                 for client in vertical[j][0]:
                     sim = sim_matrix[i, client]
                     if len(kNN) < k:
                         heapq.heappush(kNN, (sim, client))
                     elif len(kNN) >= k and kNN[0][0] < sim:  # Full kNN and update
                         heapq.heapreplace(kNN, (sim, client))
-            else:  # Search first in the most promising users, those who rated this item
+            else:  # Search first in the most similar users, those who rated this item
                 kNN = []
                 for (sim, other) in a:
                     if r[other, j] > 0.0:
