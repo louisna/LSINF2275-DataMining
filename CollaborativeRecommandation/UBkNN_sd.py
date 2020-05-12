@@ -4,6 +4,7 @@ import random
 import math
 from queue import PriorityQueue
 import time
+from tqdm import tqdm
 import heapq
 random.seed(1998)
 
@@ -31,7 +32,7 @@ def uBkNN_sd(r, k=15):
         for j in range(i+1, n_row):
             a = np.dot(r[i, :], r[j, :])
             if a != 0.0:
-                a = a/np.sqrt(np.dot(r[i, :], r[j, :]))
+                a = a/(np.linalg.norm(r[i, :]) * np.linalg.norm(r[j, :]))
                 sim_matrix[i, j] = a
                 sim_matrix[j, i] = a
 
@@ -39,8 +40,7 @@ def uBkNN_sd(r, k=15):
 
     r_hat = r.copy()
 
-    for i in range(n_row):
-        print(i)
+    for i in tqdm(range(n_row)):
         a = [(sim_matrix[i, j], j) for j in range(n_row)]
         a.sort(key=lambda iii: iii[0], reverse=True)
         for j in range(n_col):

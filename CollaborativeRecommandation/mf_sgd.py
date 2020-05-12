@@ -1,10 +1,9 @@
 import numpy as np
 from tqdm import tqdm
-import math
 
 
 # https://blog.insightdatascience.com/explicit-matrix-factorization-als-sgd-and-all-that-jazz-b00e4d9b21ea
-def sgd(R, k, learning_rate=0.001, n_iter=50, lmbda=0.0):
+def sgd(R, k, learning_rate=0.001, n_iter=100, lmbda=0.01):
 
     def predict(u, i):
         pred = global_bias + user_bias[u] + movie_bias[i]

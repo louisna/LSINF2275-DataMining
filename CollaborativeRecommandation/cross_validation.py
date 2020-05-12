@@ -2,6 +2,7 @@ from UBkNN import uBkNN
 from UBkNN_sd import uBkNN_sd
 from mf_sgd import sgd
 from weighted_slope_one import weighted_slope_one
+from basic_algorithms import normal_predictor, baseline
 
 from surprise import Dataset
 from surprise import SVD, SlopeOne, SVDpp, NormalPredictor, BaselineOnly, NMF, CoClustering
@@ -53,7 +54,7 @@ def cross_validation(DB, k, n_folds=10, cf=uBkNN):
                     MAE += abs(R_test[i, j] - R_hat[i, j])
         MSE /= len(test_index)
         MAE /= len(test_index)
-        print(MSE, MAE)
+        print(MSE, MAE, np.sqrt(MSE))
         MSE_g[index_fold] = MSE
         MAE_g[index_fold] = MAE
         index_fold += 1
@@ -89,5 +90,5 @@ def open_file(filename):
 
 if __name__ == '__main__':
     DB = open_file('ml-100k/u.data')
-    cross_validation(DB, 40, cf=weighted_slope_one)
+    cross_validation(DB, 40, cf=baseline)
     # cross_validation_surprise()

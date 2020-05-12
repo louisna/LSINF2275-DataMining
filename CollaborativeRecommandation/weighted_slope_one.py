@@ -48,3 +48,6 @@ def weighted_slope_one(R):
 
     return R_hat
 
+# TODO: Per-user trustiness Approaches
+
+# TODO: Item-usefulness based Approaches
