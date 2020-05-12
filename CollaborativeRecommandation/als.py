@@ -1,97 +1,58 @@
 import numpy as np
-from tqdm import tqdm
-import math
-from pyspark.mllib.recommendation import ALS, MatrixFactorizationModel, Rating
+from scipy.sparse import csr_matrix, diags, eye
+from scipy.sparse.linalg import spsolve
+import random
 
-# This algorithm is based on the article from
-# https://medium.com/radon-dev/als-implicit-collaborative-filtering-5ed653ba39fe
-# https://blog.insightdatascience.com/explicit-matrix-factorization-als-sgd-and-all-that-jazz-b00e4d9b21ea
+random.seed(1998)
 
-# TODO: Once the convergence criterion is done: increase max_iter to 50 (or more ?)
-def cf_als(R, k, lbd=0.06, max_iter=10, alpha=1):
-    """
-    Collaborative filtering algorithm using matrix factorization
-    :param R: The training matrix of ratings
-    :param k: number of latent dimensions
-    :param lbd: lambda parameter for the regularization
-    :param max_iter: maximal number of iterations
-    :param alpha: scaling parameter for the preference importance
-    :return: R_hat, the matrix containing the predictions
-    """
 
-    n_users, n_movies = R.shape
+def als(r, k=20):
+    ### https://medium.com/radon-dev/als-implicit-collaborative-filtering-5ed653ba39fe
+    lam = 1e-3
+    nb_iteration = 300
 
-    # Init X and Y to random values:
-    # One vector x for each user, one vector y for each movie
-    # Each vector of dimension k (k latent classes)
-    X = np.random.normal(size=(n_users, k), loc=2.5)
-    Y = np.random.normal(size=(n_movies, k), loc=2.5)
+    # data(R) must be csr_matrix format n by m
+    r_hat = r.copy()
+    r = csr_matrix(r)
+    n_row, n_col = r.shape
 
-    # Confidence matrix
-    C = R.copy()
-    C = alpha * C
+    # init
+    X = csr_matrix(np.random.normal(size=(n_row, k)))
+    Y = csr_matrix(np.random.normal(size=(n_col, k)))
 
-    # Pre-compute I and lbd * I
-    X_I = np.eye(n_users)
-    Y_I = np.eye(n_movies)
-    Id = np.eye(k)
-    lI = lbd * Id
+    # iterate
+    for iteration in range(nb_iteration):
 
-    # TODO: include a convergence criterion to stop the iterations
-    # Repeat until convergence / maximum number of iterations reached
-    for iteration in tqdm(range(max_iter)):
+        yTy = Y.T.dot(Y)
+        xTx = X.T.dot(X)
 
-        # Pre-compute X.T * X and Y.T * Y
-        xtx = np.dot(X.T, X)
-        yty = np.dot(Y.T, Y)
+        print(iteration)
+        for u in range(n_row):  # for each user u
+            u_row = r[u, :].toarray()
 
-        # First update the x's, keep Y constant
-        for u in range(n_users):
-            # Get the user row
-            u_row = C[u, :]
-
-            # Preference of user u
             p_u = u_row.copy()
+            p_u[p_u != 0] = 1.0
 
-            # Compute Cu and Cu - I
-            # TODO: check if good behavior
-            CuI = np.diag(u_row)
-            Cu = CuI + Y_I
+            CuI = diags(u_row, [0])
 
-            yT_CuI_y = Y.T.dot(CuI).dot(Y)
-            yT_Cu_pu = Y.T.dot(Cu).dot(p_u.T)
-            X[u] = np.linalg.solve(yty + yT_CuI_y + lI, yT_Cu_pu)
-            X[u, X[u] < 0] = 0.0
+            X[u] = spsolve(yTy + Y.T.dot(CuI).dot(Y) + lam * eye(k), Y.T.dot(CuI + eye(n_col)).dot(p_u.T))
 
-        # Second update the y's, keep X constant
-        for i in range(n_movies):
-            # Get the movie column
-            i_row = C[:, i].T
+        for i in range(n_col):  # for each item i
+            i_row = r[:, i].T.toarray()
 
-            # Preference for that movie
             p_i = i_row.copy()
+            p_i[p_i != 0] = 1.0
 
-            # Compute Ci and Ci - I
-            CiI = np.diag(i_row)
-            Ci = CiI + X_I
+            CiI = diags(i_row, [0])
 
-            xT_CiI_x = X.T.dot(CiI).dot(X)
-            xT_Ci_pi = X.T.dot(Ci).dot(p_i.T)
-            Y[i] = np.linalg.solve(xtx + xT_CiI_x + lI, xT_Ci_pi)
-            Y[i, Y[i] < 0] = 0.0
+            Y[i] = spsolve(xTx + X.T.dot(CiI).dot(X) + lam * eye(k), X.T.dot(CiI + eye(n_row)).dot(p_i.T))
 
-    return np.dot(X, Y.T)
+    r_approx = X.dot(Y.T)
 
+    for i in range(n_row):
+        for j in range(n_col):
+            if r_hat[i, j] != 0:  # Not compute if already exist
+                continue
+            r_hat[i, j] = r_approx[i, j]
 
-def test(R, k):
-    model = ALS.train(R, k, 10)
-    pred = model.predictAll(R)
-    return pred
-
-
-if __name__ == '__main__':
-    a = np.array([
-        [1, 2, 4, 2],
-        [1, 2, 4, 2],
-        [1, 2, 0, 2]])
-    print(test(a, 2))
+    return r_hat
