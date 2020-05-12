@@ -1,7 +1,11 @@
 from UBkNN import uBkNN
 from UBkNN_sd import uBkNN_sd
-from als import cf_als
 from mf_sgd import sgd
+from weighted_slope_one import weighted_slope_one
+
+from surprise import Dataset
+from surprise import SVD, SlopeOne, SVDpp, NormalPredictor, BaselineOnly, NMF, CoClustering
+from surprise.model_selection import cross_validate
 
 import numpy as np
 import pandas as pd
@@ -60,6 +64,21 @@ def cross_validation(DB, k, n_folds=10, cf=uBkNN):
     return MSE, MAE
 
 
+def cross_validation_surprise():
+    algos = [SVD(), SlopeOne(), SVDpp(), NormalPredictor(), BaselineOnly(), NMF(), CoClustering()]
+    results = []
+
+    DB = Dataset.load_builtin('ml-100k')
+
+    for algo in algos:
+        # Cross validation
+        res = cross_validate(algo, data=DB, measures=['MSE', 'MAE'], cv=10)
+        print(res)
+        results.append(res)
+
+    print(results)
+
+
 # From http://www.gregreda.com/2013/10/26/using-pandas-on-the-movielens-dataset/
 def open_file(filename):
     r_cols = ['user_id', 'movie_id', 'rating', 'unix_timestamp']
@@ -70,4 +89,5 @@ def open_file(filename):
 
 if __name__ == '__main__':
     DB = open_file('ml-100k/u.data')
-    cross_validation(DB, 40, cf=sgd)
+    cross_validation(DB, 40, cf=weighted_slope_one)
+    # cross_validation_surprise()
