@@ -90,10 +90,20 @@ def weighted_slope_one_item_usefulness(R):
 
     item_usefulness = np.zeros(shape=R.shape)
     max_MAE = np.amax(MAE)
-    # item_usefulness = max_MAE - MAE  # Linear
-    for u in tqdm(range(n_users)):
+
+    # baseline  0.8859573066706942 0.7463491683306132 0.9412530513473485
+    # linear    0.8861970787171338 0.7440920463116691 0.941380411266951
+    # exp 1.5   0.8881926672286716 0.7429353745097608 0.942439741961613
+    # exp 1.9   0.8913312633491578 0.7423522496572806 0.9441034177192442
+    # exp 2     0.8920564872012366 0.7422986530203007 0.9444874203509735
+    # exp 2.5   0.8951958126904032 0.7422252807614518 0.9461478809839418
+    # exp 3     0.8976216432070613 0.7423016415961284 0.9474289647287871
+    # exp 10    0.9082221891070207 0.7433291167884744 0.9530069197582044
+
+    #  item_usefulness = max_MAE - MAE  # Linear
+    for u in range(n_users):
         for i in range(n_movies):
-            item_usefulness[u, i] = 30 ** (max_MAE - MAE[u, i])  # Exponential
+            item_usefulness[u, i] = 2.5 ** (max_MAE - MAE[u, i])  # Exponential
 
 
     R_hat = R.copy()
