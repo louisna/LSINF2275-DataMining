@@ -1,11 +1,11 @@
 import numpy as np
 from tqdm import tqdm
-from weighted_slope_one import weighted_slope_one
+from weighted_slope_one import weighted_slope_one, weighted_slope_one_item_usefulness
 
 
 # This algorithm is strongly inspired by the article available on
 # https://blog.insightdatascience.com/explicit-matrix-factorization-als-sgd-and-all-that-jazz-b00e4d9b21ea
-def sgd(R, k=30, learning_rate=0.001, n_iter=10, lmbda=0.01):
+def sgd(R, k=30, learning_rate=0.001, n_iter=100, lmbda=0.01):
     """
     Computes an explicit matrix factorization using stochastic gradient descent
     :param R: the rating matrix
@@ -17,8 +17,9 @@ def sgd(R, k=30, learning_rate=0.001, n_iter=10, lmbda=0.01):
     """
 
     # without   0.950238323717431   0.7768049924752987  0.9748016843016999 k = 30 n_iter = 10
-    # with      0.8980681979392213  0.752499432340754   0.9476646020292313 k = 30 n_iter = 10
-    # R = weighted_slope_one(R)
+    # with      0.8980681979392213  0.752499432340754   0.9476646020292313 k = 30 n_iter = 10 weighted_slope_one
+    # with      0.9012620038919742  0.7470244552052694  0.9493481994989901 k = 30 n_iter = 10 weighted_slope_one_item_usefulness the better expo
+    R = weighted_slope_one_item_usefulness(R)
 
     def predict(u, i):
         """
