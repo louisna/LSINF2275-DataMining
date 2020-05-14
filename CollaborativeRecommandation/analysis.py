@@ -74,7 +74,7 @@ def plot_analyze_k(filename):
 
 
 if __name__ == '__main__':
-    DB = open_file('ml-100k/u.data')
-    analyze_by_k(DB, uBkNN_sd, 1, 50)
-    analyze_by_k(DB, uBkNN, 1, 50)
-    # plot_analyze_k('analyze_k_1_30_ubknn_sd.txt')
+    # DB = open_file('ml-100k/u.data')
+    # analyze_by_k(DB, uBkNN_sd, 1, 50)
+    # analyze_by_k(DB, uBkNN, 1, 50)
+    plot_analyze_k('analyze_k_1_30_ubknn_sd.txt')
