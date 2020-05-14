@@ -1,10 +1,11 @@
 import numpy as np
 from tqdm import tqdm
+from weighted_slope_one import weighted_slope_one
 
 
 # This algorithm is strongly inspired by the article available on
 # https://blog.insightdatascience.com/explicit-matrix-factorization-als-sgd-and-all-that-jazz-b00e4d9b21ea
-def sgd(R, k, learning_rate=0.001, n_iter=100, lmbda=0.01):
+def sgd(R, k=30, learning_rate=0.001, n_iter=10, lmbda=0.01):
     """
     Computes an explicit matrix factorization using stochastic gradient descent
     :param R: the rating matrix
@@ -14,6 +15,10 @@ def sgd(R, k, learning_rate=0.001, n_iter=100, lmbda=0.01):
     :param lmbda: regularization parameter
     :return: the rating prediction matrix
     """
+
+    # without   0.950238323717431   0.7768049924752987  0.9748016843016999 k = 30 n_iter = 10
+    # with      0.8980681979392213  0.752499432340754   0.9476646020292313 k = 30 n_iter = 10
+    # R = weighted_slope_one(R)
 
     def predict(u, i):
         """

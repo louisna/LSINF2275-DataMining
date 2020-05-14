@@ -67,7 +67,7 @@ def cross_validation(DB, k=40, n_folds=10, cf=uBkNN):
                     MAE += abs(R_valid[i, j] - R_hat[i, j])
         MSE /= len(test_index)
         MAE /= len(test_index)
-        # print(MSE, MAE, np.sqrt(MSE))  # Also print the RMSE for comparison with other algorithms
+        print(MSE, MAE, np.sqrt(MSE))  # Also print the RMSE for comparison with other algorithms
         MSE_g[index_fold] = MSE
         MAE_g[index_fold] = MAE
         index_fold += 1
@@ -113,5 +113,5 @@ def open_file(filename):
 
 if __name__ == '__main__':
     DB = open_file('ml-100k/u.data')
-    cross_validation(DB, 40, cf=weighted_slope_one_item_usefulness)
+    cross_validation(DB, 40, cf=sgd)
     # cross_validation_surprise()
