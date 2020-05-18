@@ -9,7 +9,7 @@ from tqdm import tqdm
 random.seed(1998)
 
 
-def uBkNN(r, k=40):
+def uBkNN(r, k=26):
     """
     Compute the rating predictions for missing values of r, using a user-based kNN model
     :param r: the rating matrix

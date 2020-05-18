@@ -4,9 +4,9 @@ from mf_sgd import sgd
 from weighted_slope_one import weighted_slope_one, weighted_slope_one_item_usefulness
 from basic_algorithms import normal_predictor, baseline
 
-from surprise import Dataset
-from surprise import SVD, SlopeOne, SVDpp, NormalPredictor, BaselineOnly, NMF, CoClustering
-from surprise.model_selection import cross_validate
+# from surprise import Dataset
+# from surprise import SVD, SlopeOne, SVDpp, NormalPredictor, BaselineOnly, NMF, CoClustering
+# from surprise.model_selection import cross_validate
 
 import numpy as np
 import pandas as pd
@@ -35,7 +35,7 @@ def build_R_from_DB(DB, indexes):
     return R
 
 
-def cross_validation(DB, k, n_folds=10, cf=uBkNN, analyzing=False):
+def cross_validation(DB, k=40, n_folds=10, cf=uBkNN, analyzing=False):
     """
     Performs a n_folds-folds cross validation on the given collaborative filtering algorithm (cf)
     :param DB: the complete database
@@ -121,5 +121,5 @@ def open_file(filename):
 
 if __name__ == '__main__':
     DB = open_file('ml-100k/u.data')
-    # cross_validation(DB, 40, cf=weighted_slope_one_item_usefulness)
-    cross_validation_surprise()
+    cross_validation(DB, 40, cf=normal_predictor)
+    # cross_validation_surprise()

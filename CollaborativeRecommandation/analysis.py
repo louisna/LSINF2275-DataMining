@@ -7,6 +7,9 @@ import time
 from cross_validation import *
 from UBkNN import uBkNN
 from UBkNN_sd import uBkNN_sd
+from mf_sgd import sgd
+from weighted_slope_one import weighted_slope_one, weighted_slope_one_item_usefulness
+from basic_algorithms import normal_predictor, baseline
 from tqdm import tqdm
 import pandas as pd
 
@@ -19,8 +22,6 @@ def from_algo_to_string(cf):
         return 'ubknn'
     elif cf == uBkNN_sd:
         return 'ubknn_sd'
-    else:
-        return 'itemrank'
 
 
 def analyze_by_k(DB, cf, min_k=1, max_k=30):
@@ -119,11 +120,45 @@ def retrieve_surprise_results():
             to_write = " ".join(map(str, values))
             mae_file.write(k + " " + to_write + '\n')
 
+"""
+def analyze_features_sgd(DB):
+    iters = list(range(1, 2, 10))
+
+    results_MSE = np.zeros(shape=(len(iters), 10))
+
+    for i in tqdm(range(len(iters))):
+        results[i] = cross_validation(DB, iters[i], cf=sgd, analyzing=True)
+
+    np.savetxt("sgd_convergence.txt", X=results, delimiter=",")
+    print('done')
+"""
+
+
+def analyze_models(DB):
+    algos = [uBkNN, uBkNN_sd, sgd, weighted_slope_one, weighted_slope_one_item_usefulness, normal_predictor, baseline]
+    res_MSE = np.zeros(shape=(len(algos), 10))
+    res_MAE = np.zeros(shape=(len(algos), 10))
+
+    for i in tqdm(range(len(algos))):
+        algo = algos[i]
+        res_MSE[i], res_MAE[i] = cross_validation(DB, cf=algo, analyzing=True)
+    np.savetxt('comparison_algos_MSE.txt', X=res_MSE, delimiter=',')
+    np.savetxt('comparison_algos_MAE.txt', X=res_MAE, delimiter=',')
+
+
+def analyse_models_output():
+    file_MSE = 'comparison_algos_MSE.txt'
+    file_MAE = 'comparison_algos_MAE.txt'
+
+    val_MSE = np.loadtxt(file_MSE, delimiter=',')
+    print(np.mean(val_MSE))
 
 
 if __name__ == '__main__':
-    # DB = open_file('ml-100k/u.data')
+    DB = open_file('ml-100k/u.data')
     # analyze_by_k(DB, uBkNN_sd, 1, 50)
     # analyze_by_k(DB, uBkNN, 1, 50)
     # plot_analyze_k('analyze_k_1_50_ubknn.txt', 'analyze_k_1_50_ubknn_sd.txt')
-    retrieve_surprise_results()
+    # retrieve_surprise_results()
+    analyze_models(DB)
+    # analyse_models_output()
