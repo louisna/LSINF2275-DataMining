@@ -12,6 +12,7 @@ import numpy as np
 import pandas as pd
 from sklearn.model_selection import KFold
 import time
+from tqdm import tqdm
 
 
 def build_R_from_DB(DB, indexes):
@@ -54,7 +55,7 @@ def cross_validation(DB, k, n_folds=10, cf=uBkNN, analyzing=False):
         R = build_R_from_DB(DB, train_index)  # Train
         R_valid = build_R_from_DB(DB, test_index)  # Validation
         a = time.time()
-        R_hat = cf(R, k)
+        R_hat = cf(R)
         # print(time.time() - a)
         nrow, ncol = R_valid.shape
         MSE = 0.0
@@ -89,17 +90,20 @@ def cross_validation_surprise():
     :return: ???
     """
     algos = [SVD(), SlopeOne(), SVDpp(), NormalPredictor(), BaselineOnly(), NMF(), CoClustering()]
-    results = []
+    algos_name = ['SVD', 'SlopeOne', 'SVDpp', 'NormalPredictor', 'BaselineOnly', 'NMF', 'CoClustering']
+    results_MSE = {}
+    results_MAE = {}
 
     DB = Dataset.load_builtin('ml-100k')
 
-    for algo in algos:
+    for i in tqdm(range(len(algos))):
         # Cross validation
-        res = cross_validate(algo, data=DB, measures=['MSE', 'MAE'], cv=10)
+        res = cross_validate(algos[i], data=DB, measures=['MSE', 'MAE'], cv=10)
         print(res)
-        results.append(res)
+        results_MSE[algos_name[i]] = res['test_mse']
+        results_MAE[algos_name[i]] = res['test_mae']
 
-    print(results)
+    return results_MSE, results_MAE
 
 
 # From http://www.gregreda.com/2013/10/26/using-pandas-on-the-movielens-dataset/
@@ -117,5 +121,5 @@ def open_file(filename):
 
 if __name__ == '__main__':
     DB = open_file('ml-100k/u.data')
-    cross_validation(DB, 40, cf=sgd)
-    # cross_validation_surprise()
+    # cross_validation(DB, 40, cf=weighted_slope_one_item_usefulness)
+    cross_validation_surprise()

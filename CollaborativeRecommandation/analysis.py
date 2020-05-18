@@ -58,6 +58,14 @@ def plot_analyze_k(filename, filename_sd):
     k, MSE, MAE = open_file_k(filename)
     ksd, MSEsd, MAEsd = open_file_k(filename_sd)
 
+    # Take only 1/2
+    k = k[::2]
+    ksd = ksd[::2]
+    MSE = MSE[::2]
+    MAE = MAE[::2]
+    MSEsd = MSEsd[::2]
+    MAEsd = MAEsd[::2]
+
     # Values of the UBkNN
     MSE_mean = np.mean(MSE, axis=1)
     MAE_mean = np.mean(MAE, axis=1)
@@ -72,31 +80,50 @@ def plot_analyze_k(filename, filename_sd):
     MSE_sdsd = np.std(MSEsd, axis=1)
     MAE_sdsd = np.std(MAEsd, axis=1)
 
-    plt.subplot(121)
-    plt.errorbar(k, MSE_mean, yerr=MSE_sd, fmt='-o', label='UBkNN')
+    plt.figure()
+    plt.errorbar(k, MSE_mean, yerr=MSE_sd, fmt='-o', label='UBkNN', alpha=0.7)
     plt.errorbar(ksd, MSE_meansd, yerr=MSE_sdsd, fmt='-x', label='UBkNN with sd scaling')
     plt.ylabel('MSE')
     plt.xlabel('Number of neighbors')
     plt.grid(True)
     plt.title('Evolution of the MSE of the UBkNN with k')
     plt.legend(loc='best')
-    plt.savefig('ubknn_k.svg')
+    plt.savefig('ubknn_k_MSE.svg')
+    plt.show()
 
-    plt.subplot(122)
-    plt.errorbar(k, MAE_mean, yerr=MAE_sd, fmt='-o', label='UBkNN')
+    plt.figure()
+    plt.errorbar(k, MAE_mean, yerr=MAE_sd, fmt='-o', label='UBkNN', alpha=0.7)
     plt.errorbar(ksd, MAE_meansd, yerr=MAE_sdsd, fmt='-x', label='UBkNN with sd scaling')
-    plt.ylabel('MSE')
+    plt.ylabel('MAE')
     plt.xlabel('Number of neighbors')
     plt.grid(True)
-    plt.title('Evolution of the MSE of the UBkNN with k')
+    plt.title('Evolution of the MAE of the UBkNN with k')
     plt.legend(loc='best')
-    plt.savefig('ubknn_k.svg')
+    plt.savefig('ubknn_k_MAE.svg')
 
     plt.show()
+
+
+def retrieve_surprise_results():
+    results_MSE, results_MAE = cross_validation_surprise()
+
+    with open('results_surprise_MSE.txt', 'w+') as mse_file:
+        for k in results_MSE.keys():
+            values = results_MSE[k]
+            to_write = " ".join(map(str, values))
+            mse_file.write(k + " " + to_write + '\n')
+
+    with open('results_surprise_MAE.txt', 'w+') as mae_file:
+        for k in results_MAE.keys():
+            values = results_MAE[k]
+            to_write = " ".join(map(str, values))
+            mae_file.write(k + " " + to_write + '\n')
+
 
 
 if __name__ == '__main__':
     # DB = open_file('ml-100k/u.data')
     # analyze_by_k(DB, uBkNN_sd, 1, 50)
     # analyze_by_k(DB, uBkNN, 1, 50)
-    plot_analyze_k('analyze_k_1_50_ubknn.txt', 'analyze_k_1_50_ubknn_sd.txt')
+    # plot_analyze_k('analyze_k_1_50_ubknn.txt', 'analyze_k_1_50_ubknn_sd.txt')
+    retrieve_surprise_results()

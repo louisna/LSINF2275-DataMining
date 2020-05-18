@@ -48,8 +48,6 @@ def weighted_slope_one(R):
     return R_hat
 
 
-# TODO: Per-user trustiness Approaches
-
 # TODO: Item-usefulness based Approaches
 def weighted_slope_one_item_usefulness(R):
     n_users, n_movies = R.shape
@@ -103,7 +101,7 @@ def weighted_slope_one_item_usefulness(R):
     #  item_usefulness = max_MAE - MAE  # Linear
     for u in range(n_users):
         for i in range(n_movies):
-            item_usefulness[u, i] = 2.5 ** (max_MAE - MAE[u, i])  # Exponential
+            item_usefulness[u, i] = 30 ** (max_MAE - MAE[u, i])  # Exponential
 
 
     R_hat = R.copy()
