@@ -89,8 +89,8 @@ def cross_validation_surprise():
     of our models with those implemented by the library
     :return: ???
     """
-    algos = [SVD(), SlopeOne(), SVDpp(), NormalPredictor(), BaselineOnly(), NMF(), CoClustering()]
-    algos_name = ['SVD', 'SlopeOne', 'SVDpp', 'NormalPredictor', 'BaselineOnly', 'NMF', 'CoClustering']
+    algos = [SVD(), SlopeOne(), NormalPredictor(), BaselineOnly(), NMF(), CoClustering()]
+    algos_name = ['SVD', 'SlopeOne', 'NormalPredictor', 'BaselineOnly', 'NMF', 'CoClustering']
     results_MSE = {}
     results_MAE = {}
 
