@@ -3,6 +3,31 @@ from tqdm import tqdm
 import math
 
 
+def baseline(R):
+    """
+    Algorithm predicting the baseline estimate for given user and item
+    The predicted rating is just the mean (computed from each rated movie)
+    :param R: the rating matrix
+    :return: prediction for missing values of R
+    """
+
+    n_users, n_movies = R.shape
+
+    # Compute the mean for each user
+    mu = np.sum(R) / np.count_nonzero(R)
+
+    R_hat = R.copy().astype(float)
+
+    # Predict for non-rated movies
+    for u in tqdm(range(n_users)):
+        for i in range(n_movies):
+            if R[u, i] != 0:
+                continue
+            R_hat[u, i] = mu
+
+    return R_hat
+
+
 def normal_predictor(R):
     """
     Algorithm predicting a random rating based on the distribution of the training set, which
@@ -15,6 +40,7 @@ def normal_predictor(R):
 
     n_users, n_movies = R.shape
 
+    # Compute the mean for each user
     mu = np.sum(R) / np.count_nonzero(R)
 
     nz = np.nonzero(R)
@@ -38,9 +64,10 @@ def normal_predictor(R):
     return R_hat
 
 
-def baseline(R):
+def baseline_biased(R):
     """
     Algorithm predicting the baseline estimate for given user and item (surprise library doc)
+    This algorithm is slightly different from the first baseline since it also adds biased values
     :param R: the rating matrix
     :return: prediction for missing values of R
     """
@@ -49,6 +76,7 @@ def baseline(R):
 
     n_users, n_movies = R.shape
 
+    # Compute the mean for each user
     mu = np.sum(R) / np.count_nonzero(R)
 
     # Compute user bias

@@ -2,11 +2,7 @@ from UBkNN import uBkNN
 from UBkNN_sd import uBkNN_sd
 from mf_sgd import sgd
 from weighted_slope_one import weighted_slope_one, weighted_slope_one_item_usefulness
-from basic_algorithms import normal_predictor, baseline
-
-from surprise import Dataset
-from surprise import SVD, SlopeOne, SVDpp, NormalPredictor, BaselineOnly, NMF, CoClustering
-from surprise.model_selection import cross_validate
+from basic_algorithms import normal_predictor, baseline, baseline_biased
 
 import numpy as np
 import pandas as pd
@@ -35,11 +31,10 @@ def build_R_from_DB(DB, indexes):
     return R
 
 
-def cross_validation(DB, k=40, n_folds=10, cf=uBkNN, analyzing=False):
+def cross_validation(DB, n_folds=10, cf=uBkNN, analyzing=False):
     """
     Performs a n_folds-folds cross validation on the given collaborative filtering algorithm (cf)
     :param DB: the complete database
-    :param k: a parameter, used in some models (default:40)
     :param n_folds: the number of folds (default: 10)
     :param cf: the collaborative filtering algorithm (default: uBkNN)
     :return: the averaged MSE and MAE on the 10 folds
@@ -56,7 +51,8 @@ def cross_validation(DB, k=40, n_folds=10, cf=uBkNN, analyzing=False):
         R_valid = build_R_from_DB(DB, test_index)  # Validation
         a = time.time()
         R_hat = cf(R)
-        # print(time.time() - a)
+        if analyzing:
+            print("Execution time on fold {}: {}".format(index_fold, time.time() - a))
         nrow, ncol = R_valid.shape
         MSE = 0.0
         MAE = 0.0
@@ -73,6 +69,7 @@ def cross_validation(DB, k=40, n_folds=10, cf=uBkNN, analyzing=False):
         MSE_g[index_fold] = MSE
         MAE_g[index_fold] = MAE
         index_fold += 1
+        break
 
     MSE = np.mean(MSE_g)
     MAE = np.mean(MAE_g)
@@ -83,6 +80,11 @@ def cross_validation(DB, k=40, n_folds=10, cf=uBkNN, analyzing=False):
     return MSE, MAE
 
 
+# Requires the installation of the surprise package
+'''
+from surprise import Dataset
+from surprise import SVD, SlopeOne, SVDpp, NormalPredictor, BaselineOnly, NMF, CoClustering
+from surprise.model_selection import cross_validate
 def cross_validation_surprise():
     """
     Performs a 10-folds cross-validation on algorithms from the surprise library. It is used to compare the performance
@@ -104,6 +106,7 @@ def cross_validation_surprise():
         results_MAE[algos_name[i]] = res['test_mae']
 
     return results_MSE, results_MAE
+'''
 
 
 # From http://www.gregreda.com/2013/10/26/using-pandas-on-the-movielens-dataset/

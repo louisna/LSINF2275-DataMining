@@ -9,7 +9,7 @@ from UBkNN import uBkNN
 from UBkNN_sd import uBkNN_sd
 from mf_sgd import sgd
 from weighted_slope_one import weighted_slope_one, weighted_slope_one_item_usefulness
-from basic_algorithms import normal_predictor, baseline
+from basic_algorithms import normal_predictor, baseline, baseline_biased
 from tqdm import tqdm
 import pandas as pd
 
@@ -155,30 +155,16 @@ def values_from_surprise():
     print(std)
 
 
-"""
-def analyze_features_sgd(DB):
-    iters = list(range(1, 2, 10))
-
-    results_MSE = np.zeros(shape=(len(iters), 10))
-
-    for i in tqdm(range(len(iters))):
-        results[i] = cross_validation(DB, iters[i], cf=sgd, analyzing=True)
-
-    np.savetxt("sgd_convergence.txt", X=results, delimiter=",")
-    print('done')
-"""
-
-
 def analyze_models(DB):
-    algos = [uBkNN, uBkNN_sd, sgd, weighted_slope_one, weighted_slope_one_item_usefulness, baseline, normal_predictor]
+    algos = [uBkNN, uBkNN_sd, sgd, weighted_slope_one, weighted_slope_one_item_usefulness, baseline, baseline_biased, normal_predictor]
     res_MSE = np.zeros(shape=(len(algos), 10))
     res_MAE = np.zeros(shape=(len(algos), 10))
 
     for i in tqdm(range(len(algos))):
         algo = algos[i]
         res_MSE[i], res_MAE[i] = cross_validation(DB, cf=algo, analyzing=True)
-    np.savetxt('comparison_algos_MSE.txt', X=res_MSE, delimiter=',')
-    np.savetxt('comparison_algos_MAE.txt', X=res_MAE, delimiter=',')
+    # np.savetxt('comparison_algos_MSE.txt', X=res_MSE, delimiter=',')
+    # np.savetxt('comparison_algos_MAE.txt', X=res_MAE, delimiter=',')
 
 
 # https://stackoverflow.com/questions/33328774/box-plot-with-min-max-average-and-standard-deviation
@@ -251,6 +237,8 @@ if __name__ == '__main__':
     # analyze_by_k(DB, uBkNN, 1, 50)
     # plot_analyze_k('analyze_k_1_50_ubknn.txt', 'analyze_k_1_50_ubknn_sd.txt')
     # retrieve_surprise_results()
-    # analyze_models(DB)
+    analyze_models(DB)
     # analyse_models_output()
-    values_from_surprise()
+    # values_from_surprise()
+    # a = cross_validation(DB, cf=baseline, analyzing=True)
+    # print(a)
