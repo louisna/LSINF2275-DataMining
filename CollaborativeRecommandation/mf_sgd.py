@@ -5,7 +5,7 @@ from weighted_slope_one import weighted_slope_one, weighted_slope_one_item_usefu
 
 # This algorithm is strongly inspired by the article available on
 # https://blog.insightdatascience.com/explicit-matrix-factorization-als-sgd-and-all-that-jazz-b00e4d9b21ea
-def sgd(R, k=40, learning_rate=0.001, n_iter=50, lmbda=0.01):
+def sgd(R, k=40, learning_rate=0.001, n_iter=80, lmbda=0.01):
     """
     Computes an explicit matrix factorization using stochastic gradient descent
     :param R: the rating matrix
