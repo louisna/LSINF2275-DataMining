@@ -69,7 +69,6 @@ def cross_validation(DB, n_folds=10, cf=uBkNN, analyzing=False):
         MSE_g[index_fold] = MSE
         MAE_g[index_fold] = MAE
         index_fold += 1
-        break
 
     MSE = np.mean(MSE_g)
     MAE = np.mean(MAE_g)
