@@ -4,9 +4,9 @@ from mf_sgd import sgd
 from weighted_slope_one import weighted_slope_one, weighted_slope_one_item_usefulness
 from basic_algorithms import normal_predictor, baseline
 
-# from surprise import Dataset
-# from surprise import SVD, SlopeOne, SVDpp, NormalPredictor, BaselineOnly, NMF, CoClustering
-# from surprise.model_selection import cross_validate
+from surprise import Dataset
+from surprise import SVD, SlopeOne, SVDpp, NormalPredictor, BaselineOnly, NMF, CoClustering
+from surprise.model_selection import cross_validate
 
 import numpy as np
 import pandas as pd

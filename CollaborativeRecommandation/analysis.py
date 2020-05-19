@@ -120,6 +120,41 @@ def retrieve_surprise_results():
             to_write = " ".join(map(str, values))
             mae_file.write(k + " " + to_write + '\n')
 
+
+def values_from_surprise():
+    # MSE
+    df = pd.read_csv('results_surprise_MSE.txt', header=None, delimiter=" ")
+    df_np = df.values
+    names = df_np[:, 0]
+    values = df_np[:, 1:]
+
+    print(values)
+
+    means = np.mean(values, axis=1)
+    a = np.asarray(values).astype(np.float64)
+    std = np.std(a, axis=1)
+
+    print(names)
+    print(means)
+    print(std)
+
+    # MAE
+    df = pd.read_csv('results_surprise_MAE.txt', header=None, delimiter=" ")
+    df_np = df.values
+    names = df_np[:, 0]
+    values = df_np[:, 1:]
+
+    print(values)
+
+    means = np.mean(values, axis=1)
+    a = np.asarray(values).astype(np.float64)
+    std = np.std(a, axis=1)
+
+    print(names)
+    print(means)
+    print(std)
+
+
 """
 def analyze_features_sgd(DB):
     iters = list(range(1, 2, 10))
@@ -135,7 +170,7 @@ def analyze_features_sgd(DB):
 
 
 def analyze_models(DB):
-    algos = [uBkNN, uBkNN_sd, sgd, weighted_slope_one, weighted_slope_one_item_usefulness, normal_predictor, baseline]
+    algos = [uBkNN, uBkNN_sd, sgd, weighted_slope_one, weighted_slope_one_item_usefulness, baseline, normal_predictor]
     res_MSE = np.zeros(shape=(len(algos), 10))
     res_MAE = np.zeros(shape=(len(algos), 10))
 
@@ -146,12 +181,68 @@ def analyze_models(DB):
     np.savetxt('comparison_algos_MAE.txt', X=res_MAE, delimiter=',')
 
 
+# https://stackoverflow.com/questions/33328774/box-plot-with-min-max-average-and-standard-deviation
 def analyse_models_output():
     file_MSE = 'comparison_algos_MSE.txt'
     file_MAE = 'comparison_algos_MAE.txt'
 
     val_MSE = np.loadtxt(file_MSE, delimiter=',')
-    print(np.mean(val_MSE))
+    val_MAE = np.loadtxt(file_MAE, delimiter=',')
+
+    n_row, n_col = val_MSE.shape
+
+    mean_MSE = np.zeros((n_row))
+    mean_MAE = np.zeros((n_row))
+    sd_MSE = np.zeros((n_row))
+    sd_MAE = np.zeros((n_row))
+    min_MSE = np.zeros(n_row)
+    min_MAE = np.zeros(n_row)
+    max_MSE = np.zeros(n_row)
+    max_MAE = np.zeros(n_row)
+
+    for i in range(n_row):
+        mean_MSE[i] = np.mean(val_MSE[i, :])
+        sd_MSE[i] = np.std(val_MSE[i, :])
+        min_MSE[i] = np.min(val_MSE[i, :])
+        max_MSE[i] = np.max(val_MSE[i, :])
+
+        mean_MAE[i] = np.mean(val_MAE[i, :])
+        sd_MAE[i] = np.std(val_MAE[i, :])
+        min_MAE[i] = np.min(val_MAE[i, :])
+        max_MAE[i] = np.max(val_MAE[i, :])
+
+    print("MSE m", mean_MSE)
+    print("MSE sd", sd_MSE)
+    print("MAE m", mean_MAE)
+    print("MAE sd", sd_MAE)
+
+    # MSE
+    fig, ax = plt.subplots()
+    ax.errorbar(np.arange(6), mean_MSE[:6], sd_MSE[:6], fmt='ok', lw=3)
+    ax.errorbar(np.arange(6), mean_MSE[:6], [mean_MSE[:6] - min_MSE[:6], max_MSE[:6] - mean_MSE[:6]],
+                 fmt='.k', ecolor='gray', lw=1)
+    ax.set_xticks(np.arange(6))
+    xticks = ['UBkNN', "UBkNN (sd)", "SGD", "WSO", "WSO (IU)", "Baseline"]
+    ax.set_xticklabels(xticks, rotation=45)
+    ax.set_ylabel('MSE')
+    ax.set_title('MSE of the different algorithms')
+    ax.yaxis.grid(True)
+    plt.savefig("results_algos_MSE.svg")
+    plt.show()
+
+    # MAE
+    fig, ax = plt.subplots()
+    ax.errorbar(np.arange(6), mean_MAE[:6], sd_MAE[:6], fmt='ok', lw=3)
+    ax.errorbar(np.arange(6), mean_MAE[:6], [mean_MAE[:6] - min_MAE[:6], max_MAE[:6] - mean_MAE[:6]],
+                fmt='.k', ecolor='gray', lw=1)
+    ax.set_xticks(np.arange(6))
+    xticks = ['UBkNN', "UBkNN (sd)", "SGD", "WSO", "WSO (IU)", "Baseline"]
+    ax.set_xticklabels(xticks, rotation=45)
+    ax.set_ylabel('MAE')
+    ax.set_title('MAE of the different algorithms')
+    ax.yaxis.grid(True)
+    plt.savefig("results_algos_MAE.svg")
+    plt.show()
 
 
 if __name__ == '__main__':
@@ -160,5 +251,6 @@ if __name__ == '__main__':
     # analyze_by_k(DB, uBkNN, 1, 50)
     # plot_analyze_k('analyze_k_1_50_ubknn.txt', 'analyze_k_1_50_ubknn_sd.txt')
     # retrieve_surprise_results()
-    analyze_models(DB)
+    # analyze_models(DB)
     # analyse_models_output()
+    values_from_surprise()
