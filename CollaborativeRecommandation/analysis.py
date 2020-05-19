@@ -218,11 +218,11 @@ def analyse_models_output():
 
     # MSE
     fig, ax = plt.subplots()
-    ax.errorbar(np.arange(6), mean_MSE[:6], sd_MSE[:6], fmt='ok', lw=3)
-    ax.errorbar(np.arange(6), mean_MSE[:6], [mean_MSE[:6] - min_MSE[:6], max_MSE[:6] - mean_MSE[:6]],
+    ax.errorbar(np.arange(7), mean_MSE[:7], sd_MSE[:7], fmt='ok', lw=3)
+    ax.errorbar(np.arange(7), mean_MSE[:7], [mean_MSE[:7] - min_MSE[:7], max_MSE[:7] - mean_MSE[:7]],
                  fmt='.k', ecolor='gray', lw=1)
-    ax.set_xticks(np.arange(6))
-    xticks = ['UBkNN', "UBkNN (sd)", "SGD", "WSO", "WSO (IU)", "Baseline"]
+    ax.set_xticks(np.arange(7))
+    xticks = ['UBkNN', "UBkNN (sd)", "SGD", "WSO", "WSO (IU)", "Baseline", "WSO (IU) + SGD"]
     ax.set_xticklabels(xticks, rotation=45)
     ax.set_ylabel('MSE')
     ax.set_title('MSE of the different algorithms')
@@ -232,11 +232,11 @@ def analyse_models_output():
 
     # MAE
     fig, ax = plt.subplots()
-    ax.errorbar(np.arange(6), mean_MAE[:6], sd_MAE[:6], fmt='ok', lw=3)
-    ax.errorbar(np.arange(6), mean_MAE[:6], [mean_MAE[:6] - min_MAE[:6], max_MAE[:6] - mean_MAE[:6]],
+    ax.errorbar(np.arange(7), mean_MAE[:7], sd_MAE[:7], fmt='ok', lw=3)
+    ax.errorbar(np.arange(7), mean_MAE[:7], [mean_MAE[:7] - min_MAE[:7], max_MAE[:7] - mean_MAE[:7]],
                 fmt='.k', ecolor='gray', lw=1)
-    ax.set_xticks(np.arange(6))
-    xticks = ['UBkNN', "UBkNN (sd)", "SGD", "WSO", "WSO (IU)", "Baseline"]
+    ax.set_xticks(np.arange(7))
+    xticks = ['UBkNN', "UBkNN (sd)", "SGD", "WSO", "WSO (IU)", "Baseline", "WSO (IU) + SGD"]
     ax.set_xticklabels(xticks, rotation=45)
     ax.set_ylabel('MAE')
     ax.set_title('MAE of the different algorithms')
@@ -252,5 +252,5 @@ if __name__ == '__main__':
     # plot_analyze_k('analyze_k_1_50_ubknn.txt', 'analyze_k_1_50_ubknn_sd.txt')
     # retrieve_surprise_results()
     # analyze_models(DB)
-    # analyse_models_output()
-    values_from_surprise()
+    analyse_models_output()
+    # values_from_surprise()
