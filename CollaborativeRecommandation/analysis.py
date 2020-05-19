@@ -4,7 +4,7 @@ import matplotlib
 import numpy as np
 import random as rnd
 import time
-from cross_validation import *
+from main import *
 from UBkNN import uBkNN
 from UBkNN_sd import uBkNN_sd
 from mf_sgd import sgd

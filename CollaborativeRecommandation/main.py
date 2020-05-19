@@ -1,14 +1,13 @@
+import numpy as np
+import pandas as pd
+from sklearn.model_selection import KFold
+import time
+
 from UBkNN import uBkNN
 from UBkNN_sd import uBkNN_sd
 from mf_sgd import sgd
 from weighted_slope_one import weighted_slope_one, weighted_slope_one_item_usefulness
 from basic_algorithms import normal_predictor, baseline, baseline_biased
-
-import numpy as np
-import pandas as pd
-from sklearn.model_selection import KFold
-import time
-from tqdm import tqdm
 
 
 def build_R_from_DB(DB, indexes):
@@ -64,8 +63,8 @@ def cross_validation(DB, n_folds=10, cf=uBkNN, analyzing=False):
                     MAE += abs(R_valid[i, j] - R_hat[i, j])
         MSE /= len(test_index)
         MAE /= len(test_index)
-        # print(MSE, MAE)
-        print(MSE, MAE, np.sqrt(MSE))  # Also print the RMSE for comparison with other algorithms
+        if analyzing:
+            print(MSE, MAE, np.sqrt(MSE))  # Also print the RMSE for comparison with other algorithms
         MSE_g[index_fold] = MSE
         MAE_g[index_fold] = MAE
         index_fold += 1
@@ -88,7 +87,7 @@ def cross_validation_surprise():
     """
     Performs a 10-folds cross-validation on algorithms from the surprise library. It is used to compare the performance
     of our models with those implemented by the library
-    :return: ???
+    :return: the MSE and MAE results over the 10-folds, for the used models
     """
     algos = [SVD(), SlopeOne(), NormalPredictor(), BaselineOnly(), NMF(), CoClustering()]
     algos_name = ['SVD', 'SlopeOne', 'NormalPredictor', 'BaselineOnly', 'NMF', 'CoClustering']

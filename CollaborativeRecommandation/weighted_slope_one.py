@@ -3,19 +3,29 @@ from tqdm import tqdm
 
 
 def weighted_slope_one(R):
+    """
+    Computes the predicted ratings matrix using a Weighted SlopeOne model
+    :param R: the rating matrix
+    :return: R_hat, the prediction matrix
+    """
+
     n_users, n_movies = R.shape
 
+    # Get the set of movies seen by the users
     sets = np.array([set(np.nonzero(R[:, i])[0]) for i in range(n_movies)], ndmin=2, dtype=set)
     S = np.array(sets.T & sets)
 
+    # For each movie, the id of users that have seen it
     # Vertical may contain empty values
     seen_by_users = []
     for u in range(n_users):
         seen_by_users.append(np.nonzero(R[u, :]))
 
+    # Deviation matrix
     dev = np.zeros(shape=S.shape)
 
-    # TODO: improve this loop
+    # Future: improve this for-loop
+    # Computation of the deviation matrix
     for i in range(n_movies):
         for j in range(n_movies):
             num = 0
@@ -28,7 +38,8 @@ def weighted_slope_one(R):
 
     R_hat = R.copy()
 
-    # TODO: improve this loop
+    # Future: improve this for-loop
+    # Predict all non-rated
     for u in tqdm(range(n_users)):
         for i in range(n_movies):
             if R[u, i] != 0:
@@ -48,10 +59,19 @@ def weighted_slope_one(R):
     return R_hat
 
 
-# TODO: Item-usefulness based Approaches
 def weighted_slope_one_item_usefulness(R):
+    """
+    Computes the predicted ratings matrix using a variant of the Weighted SlopeOne model,
+    based on the usefulness of each movie. The higher the usefulness, the higher the importance of the movie during
+    the prediction phase.
+    :param R: the rating matrix
+    :return: R_hat, the prediction matrix
+    """
+
     n_users, n_movies = R.shape
 
+    # For each movie, the id of users that have seen it
+    # Vertical may contain empty values
     sets = np.array([set(np.nonzero(R[:, i])[0]) for i in range(n_movies)], ndmin=2, dtype=set)
     S = np.array(sets.T & sets)
 
@@ -60,9 +80,11 @@ def weighted_slope_one_item_usefulness(R):
     for u in range(n_users):
         seen_by_users.append(np.nonzero(R[u, :]))
 
+    # Deviation matrix
     dev = np.zeros(shape=S.shape)
 
-    # TODO: improve this loop
+    # Future: improve this for-loop
+    # Computation of the deviation matrix
     for i in range(n_movies):
         for j in range(n_movies):
             num = 0
@@ -75,6 +97,8 @@ def weighted_slope_one_item_usefulness(R):
 
     MAE = np.zeros(shape=R.shape)
 
+    # Future: improve this for-loop
+    # Compute the MAE for each predicted movie
     for u in tqdm(range(n_users)):
         for i in range(n_movies):
             num = 0.0
@@ -89,23 +113,15 @@ def weighted_slope_one_item_usefulness(R):
     item_usefulness = np.zeros(shape=R.shape)
     max_MAE = np.amax(MAE)
 
-    # baseline  0.8859573066706942 0.7463491683306132 0.9412530513473485
-    # linear    0.8861970787171338 0.7440920463116691 0.941380411266951
-    # exp 1.5   0.8881926672286716 0.7429353745097608 0.942439741961613
-    # exp 1.9   0.8913312633491578 0.7423522496572806 0.9441034177192442
-    # exp 2     0.8920564872012366 0.7422986530203007 0.9444874203509735
-    # exp 2.5   0.8951958126904032 0.7422252807614518 0.9461478809839418
-    # exp 3     0.8976216432070613 0.7423016415961284 0.9474289647287871
-    # exp 10    0.9082221891070207 0.7433291167884744 0.9530069197582044
-
     #  item_usefulness = max_MAE - MAE  # Linear
     for u in range(n_users):
         for i in range(n_movies):
-            item_usefulness[u, i] = 30 ** (max_MAE - MAE[u, i])  # Exponential
-
+            item_usefulness[u, i] = 30 ** (max_MAE - MAE[u, i])  # Exponential implementation
 
     R_hat = R.copy()
-    # TODO: improve this loop
+
+    # Future: improve this for-loop
+    # Predict all non-rated
     for u in tqdm(range(n_users)):
         for i in range(n_movies):
             if R[u, i] != 0:

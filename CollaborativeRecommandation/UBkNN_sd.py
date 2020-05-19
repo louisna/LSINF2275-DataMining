@@ -1,13 +1,7 @@
 import numpy as np
-import sys
-import random
 import math
-from queue import PriorityQueue
-import time
-from tqdm import tqdm
 import heapq
 from tqdm import tqdm
-random.seed(1998)
 
 
 def uBkNN_sd(r, k=26):
@@ -15,7 +9,7 @@ def uBkNN_sd(r, k=26):
         Compute the rating predictions for missing values of r, using a user-based kNN model
         It also takes into account the standard deviation of the users to predicted more accurately
         :param r: the rating matrix
-        :param k: the number of neighbors
+        :param k: the number of neighbors. Default = 26, found empirically
         :return: the rating prediction matrix
         """
     n_row, n_col = r.shape
